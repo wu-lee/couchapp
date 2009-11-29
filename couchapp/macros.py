@@ -58,7 +58,9 @@ def run_code_macros(f_string, app_dir, ui):
            if ui.verbose>=2:
                ui.logger.info("process code macro: %s" % filename)
            try:
-               library += ui.read(filename)
+               content = ui.read(filename)
+               # macro extraction recursively
+               library += run_code_macros(content, app_dir, ui)
            except IOError, e:
                raise MacroError(str(e))
            filenum += 1
