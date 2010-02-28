@@ -1,18 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2008,2009 Benoit Chesneau <benoitc@e-engura.org>
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at#
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# This file is part of couchapp released under the Apache 2 license. 
+# See the NOTICE for more information.
 
 import base64
 import collections
@@ -50,8 +39,9 @@ _http_pool = {}
 
 class CouchDBResource(object):
   
-    def __init__(self, ui, url="http://127.0.0.1:5984", headers=None, timeout=DEFAULT_TIMEOUT, 
-            max_connections=MAX_CONNECTIONS, key_file=None, cert_file=None):
+    def __init__(self, ui, url="http://127.0.0.1:5984", headers=None, 
+            timeout=DEFAULT_TIMEOUT, max_connections=MAX_CONNECTIONS, 
+            key_file=None, cert_file=None):
         headers = headers or {}
         uri = url_parser(url)
         if uri.scheme != "http" and uri.scheme != "https":
@@ -189,7 +179,6 @@ class CouchDBResource(object):
         
         headers = headers or {}
         headers.update(self._headers.copy())
-        
 
         size = headers.get('Content-Length', None)
         if payload:
@@ -281,9 +270,9 @@ class HTTPPool(object):
         if hasattr(httplib.HTTPConnection, 'timeout'):
             kwargs['timeout'] = self.timeout
         
-        if self.uri.port:
+        if self.uri.port and self.uri.port is not None:
             kwargs['port'] = self.uri.port
-
+            
         if self.uri.scheme == "https":
             kwargs.update(dict(key_file=self.key_file, cert_file=self.cert_file))
             connection = httplib.HTTPSConnection(self.uri.hostname, **kwargs)
@@ -368,15 +357,13 @@ class ResponseStream(object):
             self.resp.close()
         
     def next(self):
-        return self.read(self.stream_size)
+        data = self.read(self.stream_size)
+        if not data:
+            raise StopIteration()
+        return data
         
     def __iter__(self):
-        while True:
-            data = self.next()
-            if data:
-                yield data
-            else:
-                break
+        return self
 
 
 def _utf8(s):

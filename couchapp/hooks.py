@@ -1,18 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2008,2009 Benoit Chesneau <benoitc@e-engura.org>
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at#
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# This file is part of couchapp released under the Apache 2 license. 
+# See the NOTICE for more information.
 
 import re
 try:
@@ -23,7 +12,7 @@ except ImportError:
 from couchapp.utils import import_module, expandpath
 
 
-def python_hook(ui, path, hooktype, cmd, **kargs):
+def python_hook(ui, path, hooktype, cmd, **kwargs):
     try:
         modname, funname = cmd.split(":")
     except ValueError:
@@ -48,11 +37,13 @@ def python_hook(ui, path, hooktype, cmd, **kargs):
         if ui.verbose >= 1:
             ui.logger.error("%s: %s don't exist in %s" % (hooktype, funname, modname))
         return
+    else:
+        fun = getattr(mod, funname)
         
     try:
         return fun(ui, path, hooktype, **kwargs)
     except Exception, e:
-        ui.logger.error("%s:%s error while executing %s [%s]" % (hooktype, name, cmd, str(e)))
+        ui.logger.error("%s:%s error while executing %s [%s]" % (hooktype, modname, cmd, str(e)))
         return -1
 
 
@@ -100,8 +91,9 @@ def external_hook(ui, path, hooktype, cmd, **kwargs):
         return -1    
 
 def hook(ui, path, hooktype, **kwargs):
-    if not 'hooks' in ui.conf.items():
+    if not 'hooks' in ui.conf:
         return
+        
     if hooktype in ui.conf['hooks']:
         for hook in ui.conf['hooks'][hooktype]:
             if hook.startswith('python:'):

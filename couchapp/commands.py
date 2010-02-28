@@ -1,18 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2008,2009 Benoit Chesneau <benoitc@e-engura.org>
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at#
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# This file is part of couchapp released under the Apache 2 license. 
+# See the NOTICE for more information.
 
 import os
 try:
@@ -44,10 +33,17 @@ def init(ui, path, *args, **opts):
 def push(ui, path, *args, **opts):
     export = opts.get('export', False)
     dest = None
+    doc_path = None
     if len(args) < 2:
-        doc_path = path
-        if args:
-            dest = args[0]
+        if export:
+            if path is None and args:
+                doc_path = args[0]
+            else:
+                doc_path = path
+        else:
+            doc_path = path
+            if args:
+                dest = args[0]
     else:
         doc_path = os.path.normpath(os.path.join(os.getcwd(), args[0]))
         dest = args[1]
@@ -56,7 +52,7 @@ def push(ui, path, *args, **opts):
     
     _maybe_reload(ui, path, doc_path)
     
-    localdoc = app.document(ui, doc_path, False)
+    localdoc = app.document(ui, doc_path, create=False, docid=opts.get('docid'))
     if export:
         if opts.get('output'):
             ui.write_json(opts.get('output'), str(localdoc))
@@ -177,7 +173,7 @@ def clone(ui, source, *args, **opts):
 def generate(ui, path, *args, **opts):
     dest = path
     if len(args) < 1:
-        raise AppError("Can't generate function, name or pat is missing")
+        raise AppError("Can't generate function, name or path is missing")
         
     if len(args) == 1:
         kind="app"
@@ -218,7 +214,7 @@ def vendor(ui, path, *args, **opts):
             
         elif len(args) > 1:
             dest = args.pop(0)
-            source = args.pop(1)
+            source = args.pop(0)
         
         if dest is None:
             raise AppError("You aren't in a couchapp.")
@@ -234,7 +230,7 @@ def vendor(ui, path, *args, **opts):
             vendorname=args.pop(0)
         elif len(args) >= 2:
             dest = args.pop(0)
-            vendorname=args.pop(1)
+            vendorname=args.pop(0)
         if dest is None:
             raise AppError("You aren't in a couchapp.")
             
@@ -305,7 +301,7 @@ globalopts = [
 ]
 
 pushopts = [
-    ('', 'no-atomic', False, "Send attachments one by one"),
+    ('', 'no-atomic', False, "send attachments one by one"),
     ('', 'export', False, "don't do push, just export doc to stdout"),
     ('', 'output', '', "if export is selected, output to the file")
 ]
@@ -317,7 +313,7 @@ table = {
         "[COUCHAPPDIR]"),
     "push":
         (push,
-        pushopts,
+        pushopts + [('', 'docid', '', "set docid")],
         "[OPTION]... [COUCHAPPDIR] DEST"),
     "clone":
         (clone,

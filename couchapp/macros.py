@@ -1,18 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright 2008,2009  Benoit Chesneau <benoitc@e-engura.org>
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at#
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
+# This file is part of couchapp released under the Apache 2 license. 
+# See the NOTICE for more information.
 
 import glob
 from hashlib import md5
@@ -39,6 +28,8 @@ def apply_lib(doc, funcs, app_dir, objs, ui):
         if not isinstance(v, basestring):
             continue
         else:
+            if ui.verbose>=2:
+                ui.logger.info("process function: %s" % k)
             old_v = v
             try:
                 funcs[k] = run_json_macros(doc, 
@@ -51,7 +42,7 @@ def apply_lib(doc, funcs, app_dir, objs, ui):
 def run_code_macros(f_string, app_dir, ui):
    def rreq(mo):
        # just read the file and return it
-       path = os.path.join(app_dir, mo.group(2).strip(' '))
+       path = os.path.join(app_dir, mo.group(2).strip())
        library = ''
        filenum = 0
        for filename in glob.iglob(path):            
@@ -79,9 +70,11 @@ def run_json_macros(doc, f_string, app_dir, ui):
    def rjson(mo):
        if mo.group(2).startswith('_attachments'): 
            # someone  want to include from attachments
-           path = os.path.join(app_dir, mo.group(2).strip(' '))
+           path = os.path.join(app_dir, mo.group(2).strip())
            filenum = 0
            for filename in glob.iglob(path):
+               if ui.verbose>=2:
+                   ui.logger.info("process json macro: %s" % filename)
                library = ''
                try:
                    if filename.endswith('.json'):
@@ -104,12 +97,16 @@ def run_json_macros(doc, f_string, app_dir, ui):
            if not filenum:
                raise MacroError("Processing code: No file matching '%s'" % mo.group(2))
        else:	
-           fields = mo.group(2).split('.')
+           if ui.verbose>=2:
+               ui.logger.info("process json macro: %s" % mo.group(2))
+           fields = mo.group(2).strip().split('.')
            library = doc
            count = len(fields)
            include_to = included
            for i, field in enumerate(fields):
-               if not field in library: break
+               if not field in library:
+                   ui.logger.warn("process json macro: unknown json source: %s" % mo.group(2))
+                   break
                library = library[field]
                if i+1 < count:
                    include_to[field] = include_to.get(field, {})
