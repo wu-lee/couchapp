@@ -82,7 +82,8 @@ class CliTestCase(unittest.TestCase):
         # should use macros
         self.assert_('stddev' in design_doc['views']['example']['map'])
         self.assert_('ejohn.org' in design_doc['shows']['example-show'])
-        
+        self.assert_('included by foo.js' in design_doc['shows']['example-show'])
+
         # should create index
         self.assert_(design_doc['_attachments']['index.html']['content_type'] == 'text/html')
         

@@ -1,7 +1,8 @@
 function(doc, req) {
   // !code lib/helpers/template.js
+  // !code lib/helpers/foo.js
   // !json lib.templates
-  
+
   respondWith(req, {
     html : function() {
       var html = template(lib.templates.example, doc);
