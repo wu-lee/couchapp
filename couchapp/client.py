@@ -6,6 +6,7 @@
 from __future__ import with_statement
 import base64
 import itertools
+import logging
 import re
 import types
 
@@ -34,6 +35,8 @@ aliases = {
 
 UNKNOWN_VERSION = tuple()
 
+logger = logging.getLogger(__name__)
+
 class CouchdbResponse(HttpResponse):
     
     @property
@@ -61,7 +64,8 @@ class CouchdbResource(Resource):
         """ add copy to HTTP verbs """
         return self.request('COPY', path=path, headers=headers, **params)
         
-    def request(self, method, path=None, payload=None, headers=None, **params):
+    def request(self, method, path=None, payload=None, headers=None,
+            params_dict=None, **params):
         """ Perform HTTP call to the couchdb server and manage 
         JSON conversions, support GET, POST, PUT and DELETE.
         
@@ -93,6 +97,11 @@ class CouchdbResource(Resource):
         headers = headers or {}
         headers.setdefault('Accept', 'application/json')
         headers.setdefault('User-Agent', USER_AGENT)
+
+        logger.debug("Resource uri: %s" % self.initial['uri'])
+        logger.debug("Request: %s %s" % (method, path))
+        logger.debug("Headers: %s" % str(headers))
+        logger.debug("Params: %s" % str(params))
 
         try:
             return Resource.request(self, method, path=path,
