@@ -23,7 +23,7 @@ from restkit.filters.oauth2 import OAuthFilter
 from couchapp import __version__
 from couchapp.errors import ResourceNotFound, ResourceConflict,\
 PreconditionFailed, RequestFailed, BulkSaveError, Unauthorized, \
-InvalidAttachment
+InvalidAttachment, AppError
 from couchapp.util import json
 
 USER_AGENT = "couchapp/%s" % __version__
