@@ -18,6 +18,35 @@ __all__ = ["generate_app", "generate_function", "generate"]
 
 logger = logging.getLogger(__name__)
 
+
+DEFAULT_APP_TREE = [
+        '_attachments',
+        'lists',
+        'shows',
+        'updates',
+        'views']
+
+
+def start_app(path):
+    try:
+        os.makedirs(path)
+    except OSError, e:
+        errno, message = e
+        raise AppError("Can't create a CouchApp in %s: %s" % (
+                path, message))
+    
+    for n in DEFAULT_APP_TREE:
+        tp = os.path.join(path, n)
+        os.makedirs(tp)
+
+    fid = os.path.join(path, '_id')
+    if not os.path.isfile(fid):
+        with open(fid, 'wb') as f:
+            f.write('_design/%s' % os.path.split(path)[1])
+    
+    doc = localdoc.document(path, create=True)
+    logger.info("%s created." % path)
+
 def generate_app(path, template=None, create=False):
     """ Generates a CouchApp in app_dir 
     
@@ -25,14 +54,7 @@ def generate_app(path, template=None, create=False):
     :return: boolean, dict. { 'ok': True } if ok, { 'ok': False, 'error': message } 
     if something was wrong.
     """
-    DEFAULT_APP_TREE = [
-        '_attachments',
-        'lists',
-        'shows',
-        'updates',
-        'views'
-    ]
-    
+        
     TEMPLATES = ['app']
     prefix = ''
     if template is not None:
@@ -187,14 +209,16 @@ def find_template_dir(name, directory=''):
     return False
     
 def generate(path, kind, name, **opts):
-    if kind not in ["app", "view", "list", "show", 'filter', 'function', 
-            'vendor', 'update', 'spatial']:
+    if kind not in ['startapp', 'app', 'view', 'list', 'show', 'filter',
+            'function', 'vendor', 'update', 'spatial']:
         raise AppError(
             "Can't generate %s in your couchapp. generator is unknown" % kind)
 
     if kind == "app":
         generate_app(path, template=opts.get("template"), 
                 create=opts.get('create', False))
+    elif kind == "startapp":
+        start_app(path)
     else:
         if name is None:
             raise AppError("Can't generate %s function, name is missing" % kind)

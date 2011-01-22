@@ -207,6 +207,25 @@ def clone(conf, source, *args, **opts):
     hook(conf, dest, "post-clone", source=source)
     return 0
 
+def startapp(conf, *args, **opts):
+    if len(args) < 1:
+        raise AppError("Can't start an app, name or path is missing")
+
+    if len(args) == 1:
+        name = args[0]
+        dest = os.path.normpath(os.path.join(os.getcwd(), ".", name))
+    elif len(args) == 2:
+        
+        name = args[1]
+        dest = os.path.normpath(os.path.join(args[0], args[1]))
+
+    if os.path.isfile(os.path.join(dest, ".couchapprc")):
+        raise AppError("can't create an app at '%s'. One already exists"
+                "here" % dest)
+
+    generator.generate(dest, "startapp", name, **opts)
+    return 0
+
 def generate(conf, path, *args, **opts):
     dest = path
     if len(args) < 1:
@@ -392,6 +411,10 @@ table = {
         (pushdocs,
         pushopts,
         "[OPTION]... SOURCE DEST"),
+    "startapp":
+        (startapp,
+        [],
+        "[COUCHAPPDIR] NAME"),
     "generate":
         (generate,
         [('', 'template', '', "template name")],
