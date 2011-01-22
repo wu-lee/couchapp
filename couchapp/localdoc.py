@@ -37,8 +37,8 @@ DEFAULT_IGNORE = """[
   // filenames matching these regexps will not be pushed to the database
   // uncomment to activate; separate entries with ","
   // ".*~$"
-  // ".*\\.swp$"
-  // ".*\\.bak$"
+  // ".*\\\\.swp$"
+  // ".*\\\\.bak$"
 ]"""
 
 
