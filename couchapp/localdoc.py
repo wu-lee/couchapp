@@ -376,15 +376,11 @@ class LocalDoc(object):
         if os.path.isdir(path):
             for root, dirs, files in os.walk(path):
                 for dirname in dirs:
-                    if dirname.startswith('.'):
-                        dirs.remove(dirname)
-                    elif self.check_ignore(dirname):
+                    if self.check_ignore(dirname):
                         dirs.remove(dirname)
                 if files:
                     for filename in files:
-                        if filename.startswith('.'):
-                            continue
-                        elif self.check_ignore(filename):
+                        if self.check_ignore(filename):
                             continue
                         else:
                             filepath = os.path.join(root, filename)
