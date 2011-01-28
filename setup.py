@@ -10,7 +10,8 @@ import sys
 if not hasattr(sys, 'version_info') or sys.version_info < (2, 5, 0, 'final'):
     raise SystemExit("Couchapp requires Python 2.5 or later.")
 
-from setuptools import setup, find_packages
+
+from distutils.core import setup
 
     
 extra = {}
@@ -81,15 +82,25 @@ setup(
         'Topic :: Utilities',
     ],
 
-    packages= find_packages(exclude=['tests']),
+    packages = [
+        'couchapp',
+        'couchapp.ext',
+        'couchapp.hooks',
+        'couchapp.hooks.compress',
+        'couchapp.restkit',
+        'couchapp.restkit.client',
+        'couchapp.restkit.conn',
+        'couchapp.restkit.filters',
+        'couchapp.restkit.http',
+        'couchapp.restkit.util',
+        'couchapp.vendors',
+        'couchapp.vendors.backends',
+    ],
+
     data_files=data_files,
 
     include_package_data = True,
     cmdclass=cmdclass,
-    
-    install_requires = [
-        'restkit>=2.3.0'
-    ],
     
     options = dict(py2exe={'dll_excludes': [ "kernelbase.dll", "powrprof.dll" ]},
                    bdist_mpkg=dict(zipdist=True,

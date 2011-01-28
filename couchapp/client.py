@@ -15,10 +15,10 @@ try:
 except ImportError:
     desktopcouch = None
 
-from restkit import Resource, HttpResponse, ResourceError, request
-from restkit import util
-from restkit.util import oauth2 as oauth
-from restkit.filters.oauth2 import OAuthFilter
+from .restkit import Resource, HttpResponse, ResourceError, request
+from .restkit import util
+from .restkit.util import oauth2 as oauth
+from .restkit.filters.oauth2 import OAuthFilter
 
 from couchapp import __version__
 from couchapp.errors import ResourceNotFound, ResourceConflict,\
