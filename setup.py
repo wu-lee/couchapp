@@ -3,6 +3,7 @@
 # This file is part of couchapp released under the Apache 2 license. 
 # See the NOTICE for more information.
 
+from distutils.command.install_data import install_data
 from distutils.core import setup
 
 import os
@@ -19,7 +20,7 @@ extra = {}
 
 def get_data_files():
     data_files = []
-    data_files.append((os.curdir, 
+    data_files.append(('couchapp', 
                        ["LICENSE", "MANIFEST.in", "NOTICE", "README.md", 
                         "THANKS.txt",]))
     return data_files
@@ -61,7 +62,6 @@ def get_scripts():
         return [os.path.join("resources", "scripts", "couchapp")]
     return [os.path.join("resources", "scripts", "couchapp.bat")]
 
-Executable = None
 if os.name == "nt" or sys.platform == "win32":
     # py2exe needs to be installed to work
     try:
@@ -97,8 +97,13 @@ if os.name == "nt" or sys.platform == "win32":
     except ImportError:
         raise SystemExit('You need py2exe installed to run Couchapp.')
 
-
-
+class install_package_data(install_data):
+    def finalize_options(self):
+        self.set_undefined_options('install',
+                                   ('install_lib', 'install_dir'))
+        install_data.finalize_options(self)
+ 
+cmdclass = {'install_data': install_package_data }
  
 setup(
     name = 'Couchapp',
@@ -128,6 +133,8 @@ setup(
     packages = all_packages(),
     package_data = get_packages_data(),
     data_files=get_data_files(),
+
+    cmdclass=cmdclass,
 
     scripts=get_scripts(),
 
