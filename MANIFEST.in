@@ -1,7 +1,6 @@
 include LICENSE
 include README.md
 include THANKS.txt
-recursive-include templates *
-recursive-include vendor *
+recursive-include couchapp/templates *
 recursive-include tests/testapp *
 recursive-include contrib *
