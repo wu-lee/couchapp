@@ -9,12 +9,11 @@ import codecs
 from hashlib import md5
 import logging
 import os
-import pkg_resources
 import re
 import string
 import sys
 
-from couchapp.errors import ScriptError, AppError
+from .errors import ScriptError, AppError
 
 try:
     import json
@@ -385,23 +384,12 @@ class ShellScript(object):
         
 
 def parse_uri(uri, section):
-    if uri.startswith("egg:"):
-        # uses entry points
-        entry_str = uri.split("egg:")[1]
-        try:
-            dist, name = entry_str.rsplit("#",1)
-        except ValueError:
-            dist = entry_str
-            name = "main"
-
-        return pkg_resources.load_entry_point(dist, section, name)
-    elif uri.startswith("python:"):
+    if uri.startswith("python:"):
         uri1 = uri.split("python:")[1]
-        components = uri1.split('.')
-        if len(components) == 1:
-            raise RuntimeError("extension uri invalid")
-        klass = components.pop(-1)
-        mod = __import__('.'.join(components))
+        module_str, klass = uri1.split("#")
+        components = module_str.split('.')
+
+        mod = __import__(module_str)
         for comp in components[1:]:
             mod = getattr(mod, comp)
         return getattr(mod, klass)
@@ -409,7 +397,7 @@ def parse_uri(uri, section):
         raise RuntimeError("extension uri invalid")
         
 def parse_hooks_uri(uri):
-    if uri.startswith("python:") or uri.startswith("egg:"):
+    if uri.startswith("python:"):
         return parse_uri(uri, "couchapp.hook")
     return ShellScript(uri)
 

@@ -5,9 +5,9 @@
 
 import os
 
-from couchapp.client import Database
-from couchapp.errors import AppError
-from couchapp import util
+from .client import Database
+from .errors import AppError
+from . import util
 
 class Config(object):
     """ main object to read configuration from ~/.couchapp.conf or 
@@ -20,13 +20,12 @@ class Config(object):
         extensions = [],
         hooks = {},
         vendors = [
-            "egg:couchapp#git",
-            "egg:couchapp#hg",
-            "egg:couchapp#couchdb"
+            "python:couchapp.vendors.backends.git#GitVendor",
+            "python:couchapp.vendors.backends.hg#HgVendor",
+            "python:couchapp.vendors.backends.couchdb#CouchdbVendor"
         ]
     )
     
-
     def __init__(self):
         self.rc_path = util.rcpath()
         self.global_conf = self.load(self.rc_path, self.DEFAULTS)

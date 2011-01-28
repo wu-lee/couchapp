@@ -152,6 +152,9 @@ def generate_function(path, kind, name, template=None):
 
 def copy_helper(path, directory, tname="templates"):
     """ copy helper used to generate an app"""
+    if tname == "vendor":
+        tname = os.path.join("templates", tname)
+
     templatedir = find_template_dir(tname, directory)
     if templatedir:
         if directory == "vendor":
@@ -160,7 +163,7 @@ def copy_helper(path, directory, tname="templates"):
                 os.makedirs(path)
             except:
                 pass
-        
+       
         for root, dirs, files in os.walk(templatedir):
             rel = relpath(root, templatedir)
             if rel == ".":

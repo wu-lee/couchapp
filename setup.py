@@ -3,70 +3,42 @@
 # This file is part of couchapp released under the Apache 2 license. 
 # See the NOTICE for more information.
 
-from distutils.command.install_data import install_data
 from distutils.core import setup
 
 import os
 import sys
 
+from couchapp import __version__
+
 if not hasattr(sys, 'version_info') or sys.version_info < (2, 5, 0, 'final'):
     raise SystemExit("Couchapp requires Python 2.5 or later.")
 
-
+executables = []
 setup_requires = []
 extra = {}
-class install_package_data(install_data):
-    def finalize_options(self):
-        self.set_undefined_options('install',
-                                   ('install_lib', 'install_dir'))
-        install_data.finalize_options(self)
- 
-cmdclass = {'install_data': install_package_data }
-
 
 def get_data_files():
     data_files = []
-
     data_files.append((os.curdir, 
                        ["LICENSE", "MANIFEST.in", "NOTICE", "README.md", 
                         "THANKS.txt",]))
+    return data_files
 
-    for root in ('templates', 'vendor'):
-        for dir, dirs, files in os.walk(root):
-            dirs[:] = [x for x in dirs if not x.startswith('.')]
-            files = [x for x in files if not x.startswith('.')]
-            data_files.append((os.path.join('couchapp', dir),
-                              [os.path.join(dir, file_) for file_ in files]))
-
-def get_include_files():
-    include_files = []
-    
-    data_path_src = os.curdir
-    data_path_dst = os.curdir
-
-    filelist = ["LICENSE", "MANIFEST.in", "NOTICE", "README.md", 
-                        "THANKS.txt",]
-    
-    for fl in filelist:
-        include_files.append((os.path.join(data_path_src, fl), 
-                           os.path.join(data_path_dst, fl)))
-
-    for root in ('templates', 'vendor'):
-        for dir, dirs, files in os.walk(root):
-            dirs[:] = [x for x in dirs if not x.startswith('.')]
-            files = [x for x in files if not x.startswith('.')]
-
-            for f in files:
-                src = os.path.join(dir, f) 
-                include_files.append((src, src))
+def ordinarypath(p):
+    return p and p[0] != '.' and p[-1] != '~'
 
 def get_packages_data():
-    return {
-            "couchapp": [
-                "templates/*",
-                "vendor/*"
-            ] 
-    }
+    packagedata = {'couchapp': []}
+
+    for root in ('templates',):
+        for curdir, dirs, files in os.walk(os.path.join("couchapp", root)):
+            print curdir
+            curdir = curdir.split(os.sep, 1)[1]
+            dirs[:] = filter(ordinarypath, dirs)
+            for f in filter(ordinarypath, files):
+                f = os.path.join(curdir, f)
+                packagedata['couchapp'].append(f)
+    return packagedata 
 
 def all_packages():
     return [
@@ -89,6 +61,7 @@ def get_scripts():
         return [os.path.join("resources", "scripts", "couchapp")]
     return [os.path.join("resources", "scripts", "couchapp.bat")]
 
+Executable = None
 if os.name == "nt" or sys.platform == "win32":
     # py2exe needs to be installed to work
     try:
@@ -113,19 +86,19 @@ if os.name == "nt" or sys.platform == "win32":
         if len(sys.argv) == 1:
             sys.argv.append("py2exe")
             sys.argv.append("-q")
-        Executable = lambda x, *y, **z: x
-        setup_requires = ["py2exe"]
+
+        extra['console'] = [{
+             'script': os.path.join("resources", "scripts", "couchapp"),
+             'copyright':'Copyright (C) 2008-2011 Benoît Chesneau and others',
+             'product_version': __version__ 
+        }]
+
 
     except ImportError:
         raise SystemExit('You need py2exe installed to run Couchapp.')
-elif sys.platform == "linux2":
-    import cx_Freeze
-    from cx_Freeze import setup, Executable
-    setup_requires = ["cx_Freeze"]
 
 
 
-from couchapp import __version__
  
 setup(
     name = 'Couchapp',
@@ -153,44 +126,16 @@ setup(
     ],
 
     packages = all_packages(),
-    packages_data = get_packages_data(),
+    package_data = get_packages_data(),
     data_files=get_data_files(),
-    include_package_data = True,
-
-    cmdclass=cmdclass,
 
     scripts=get_scripts(),
 
-    executables=[
-        Executable(
-            "Couchapp.py",
-            compress=1,
-            copyDependentFiles=True)
-    ],
-    
     options = dict(py2exe={
-                        'compressed': 1,
-                        'optimize': 2,
-                        "ascii": 1,
-                        "excludes": [
-                            "pywin",
-                            "pywin.debugger",
-                            "pywin.debugger.dbgcon",
-                            "pywin.dialogs",
-                            "pywin.dialogs.list",
-                        ],
                         'dll_excludes': [
                             "kernelbase.dll",
                             "powrprof.dll" 
                         ]
-                   },
-
-                   build_exe={
-                        "compressed": 1,
-                        "optimize": 2,
-                        "include_files": get_include_files(),
-                        "create_shared_zip": 1,
-                        "include_in_shared_zip": get_include_files()
                    },
 
                    bdist_mpkg=dict(zipdist=True,
@@ -198,23 +143,6 @@ setup(
                                    readme='resources/macosx/Readme.html',
                                    welcome='resources/macosx/Welcome.html')
     ),
-                                   
-    entry_points="""
-    [couchapp.extension]
-    autopush=couchapp.ext.autopush
-
-    [couchapp.vendor]
-    git=couchapp.vendors.backends.git:GitVendor
-    hg=couchapp.vendors.backends.hg:HgVendor
-    couchdb=couchapp.vendors.backends.couchdb:CouchdbVendor
-    
-    [couchapp.hook]
-    compress=couchapp.hooks.compress:hook
-    
-    [console_scripts]
-    couchapp=couchapp.dispatch:run
-    """,
-    
-    setup_requires=setup_requires,
+ 
     **extra
 )
