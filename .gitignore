@@ -2,6 +2,7 @@
 *.swp
 *.pyc
 Couchapp.egg-info
+couchapp.egg-info
 build
 dist
 setuptools-*
