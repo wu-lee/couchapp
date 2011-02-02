@@ -27,7 +27,7 @@ To install or upgrade to the latest released version of couchapp:
 
 To install/upgrade development version :
    
-    $ pip install http+git://github.com/couchapp/couchapp.git#egg=Couchapp
+    $ pip install git+http://github.com/couchapp/couchapp.git#egg=Couchapp
 
 Note: some installations need to use `sudo` command beafore each command line.
 
