@@ -15,10 +15,10 @@ try:
 except ImportError:
     desktopcouch = None
 
-from .restkit import Resource, HttpResponse, ResourceError, request
+from .restkit import Resource, ClientResponse, ResourceError, request
 from .restkit import util
-from .restkit.util import oauth2 as oauth
-from .restkit.filters.oauth2 import OAuthFilter
+from .restkit import oauth2 as oauth
+from .restkit.filters import OAuthFilter
 
 from couchapp import __version__
 from couchapp.errors import ResourceNotFound, ResourceConflict,\
@@ -37,7 +37,7 @@ UNKNOWN_VERSION = tuple()
 
 logger = logging.getLogger(__name__)
 
-class CouchdbResponse(HttpResponse):
+class CouchdbResponse(ClientResponse):
     
     @property
     def json_body(self):
