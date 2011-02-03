@@ -4,7 +4,11 @@
 # See the NOTICE for more information.
 
 from distutils.command.install_data import install_data
-from distutils.core import setup
+
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 
 import os
 import sys
@@ -48,11 +52,8 @@ def all_packages():
         'couchapp.hooks',
         'couchapp.hooks.compress',
         'couchapp.restkit',
-        'couchapp.restkit.client',
-        'couchapp.restkit.conn',
-        'couchapp.restkit.filters',
-        'couchapp.restkit.http',
-        'couchapp.restkit.util',
+        'couchapp.restkit.manager',
+        'couchapp.restkit.contrib',
         'couchapp.vendors',
         'couchapp.vendors.backends',
     ]
