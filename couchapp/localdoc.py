@@ -139,7 +139,7 @@ class LocalDoc(object):
         if url.startswith("desktopcouch://"):
             if not desktopcouch:
                 raise AppError("Desktopcouch isn't available on this"+
-                    "machine. You can't access to %s" % db_string)
+                    "machine. You can't access to %s" % url)
             ctx = desktopcouch.local_files.DEFAULT_CONTEXT
             bookmark_file = os.path.join(ctx.db_dir, "couchdb.html")
             try:

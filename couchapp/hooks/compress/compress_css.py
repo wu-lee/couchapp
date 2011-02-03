@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(__file__))
 
 from couchapp.util import relpath
 
-__all__ = ['CSSParser', 'merge_css']
+__all__ = ['CSSParser']
 
 re_selector = re.compile("/\./")
 re_comments = re.compile("(\/\*).*?(\*\/)")

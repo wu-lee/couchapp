@@ -190,7 +190,7 @@ class Database(object):
         if uri.startswith("desktopcouch://"):
             if not desktopcouch:
                 raise AppError("Desktopcouch isn't available on this"+
-                    "machine. You can't access to %s" % db_string)
+                    "machine. You can't access to %s" % uri)
             uri = "http://localhost:%s/%s" % (
                 desktopcouch.find_port(), uri[15:])
             ctx = desktopcouch.local_files.DEFAULT_CONTEXT
