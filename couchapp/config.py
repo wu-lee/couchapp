@@ -131,6 +131,7 @@ class Config(object):
     def get_dbs(self, db_string=None):
         db_string = db_string or ''
         if db_string.startswith("http://") or \
+                db_string.startswith("https://") or \
                 db_string.startswith("desktopcouch://"):
             dburls = db_string
         else:
