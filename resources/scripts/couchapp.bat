@@ -1,5 +1,9 @@
-@echo
-REM This file is part of couchapp released under the Apache 2 license. 
-REM See the NOTICE for more information.
+@echo off
+rem Windows script for Couchapp 
 
-pythonw.exe -OO -c "import couchapp:dispatch" %*
+rem Use a full path to Python (relative to this script) as the standard Python
+rem install does not put python.exe on the PATH...
+rem %~dp0 is the directory of this script
+
+"%~dp0..\python" "%~dp0couchapp" %*
+endlocal
