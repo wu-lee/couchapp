@@ -8,7 +8,6 @@ import errno
 import logging
 import mimetypes
 import os
-import threading
 import time
 import socket
 import types
@@ -314,6 +313,7 @@ class Client(object):
 
     def connect(self, addr, ssl):
         """ create a socket """
+        log.debug("create new connection")
         for res in socket.getaddrinfo(addr[0], addr[1], 0, 
                 socket.SOCK_STREAM):
             af, socktype, proto, canonname, sa = res
@@ -365,6 +365,7 @@ class Client(object):
 
     def close_connection(self):
         """ close a connection """
+        log.debug("close connection")
         close(self._sock)
         self._sock = None
 
@@ -592,7 +593,7 @@ class Client(object):
             resp = http.Request(unreader)
             if resp.status_int != 100:
                 break
-
+            resp.body.discard()
             log.debug("Go 100-Continue header")
 
         log.info("Got response: %s" % resp.status)
