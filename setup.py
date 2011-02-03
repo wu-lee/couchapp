@@ -65,9 +65,11 @@ def all_packages():
     ]
 
 def get_scripts():
-    if os.name == "posix":
-        return [os.path.join("resources", "scripts", "couchapp")]
-    return [os.path.join("resources", "scripts", "couchapp.bat")]
+    scripts = [os.path.join("resources", "scripts", "couchapp")]
+    if os.name == "nt":
+        scripts.append(os.path.join("resources", "scripts",
+            "couchapp.bat"))
+    return scripts
 
 if os.name == "nt" or sys.platform == "win32":
     # py2exe needs to be installed to work
