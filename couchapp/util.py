@@ -21,12 +21,7 @@ except ImportError:
     try:
         import simplejson as json
     except ImportError:
-        raise AppError("""simplejson isn't installed
-
-Install it with the command:
-
-    pip install simplejson
-""")
+        from . import simplejson as json 
 
 logger = logging.getLogger(__name__)
 

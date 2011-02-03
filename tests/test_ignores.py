@@ -17,10 +17,11 @@
 
 import unittest
 import tempfile
-import json
 import os
 from shutil import rmtree
+
 from couchapp.localdoc import LocalDoc as doc
+import couchapp.simplejson as json
 
 class IgnoresTests(unittest.TestCase):
 

@@ -21,10 +21,9 @@ except ImportError:
 
 try:
     import ssl # python 2.6
-    have_ssl = True
 except ImportError:
-    have_ssl = False
-
+    from .. import ssl
+    
 from . import __version__ 
 from .datastructures import MultiDict
 from .errors import AlreadyRead, RequestError, RequestTimeout, \
@@ -327,11 +326,6 @@ class Client(object):
                 sck.connect(sa)
                     
                 if ssl:
-                    if not have_ssl:
-                        raise ValueError("https isn't supported.  On python 2.5x,"
-                                        + " https support requires ssl module "
-                                        + "(http://pypi.python.org/pypi/ssl) "
-                                        + "to be intalled.")
                     validate_ssl_args(self.ssl_args)
                     sck = ssl.wrap_socket(sck, **self.ssl_args)
                 
