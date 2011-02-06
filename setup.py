@@ -203,28 +203,32 @@ def find_ssl():
 
 socket_inc = "./couchapp/ssl/2.5.1"
 
+try:
+    import ssl
+except ImportError:
+    ssl = None
 
-link_args = []
-if sys.platform == 'win32':
+if not ssl:
+    link_args = []
+    if sys.platform == 'win32':
 
-    # Assume the openssl libraries from GnuWin32 are installed in the
-    # following location:
-    gnuwin32_dir = os.environ.get("GNUWIN32_DIR", r"C:\Utils\GnuWin32")
+        # Assume the openssl libraries from GnuWin32 are installed in the
+        # following location:
+        gnuwin32_dir = os.environ.get("GNUWIN32_DIR", r"C:\Utils\GnuWin32")
 
-    # Set this to 1 for a dynamic build (depends on openssl DLLs)
-    # Dynamic build is about 26k, static is 670k
-    dynamic = int(os.environ.get("SSL_DYNAMIC", 0))
+        # Set this to 1 for a dynamic build (depends on openssl DLLs)
+        # Dynamic build is about 26k, static is 670k
+        dynamic = int(os.environ.get("SSL_DYNAMIC", 0))
 
-    ssl_incs = [os.environ.get("C_INCLUDE_DIR") or os.path.join(gnuwin32_dir, "include")]
-    ssl_libs = [os.environ.get("C_LIB_DIR") or os.path.join(gnuwin32_dir, "lib")]
-    libs = ['ssl', 'crypto', 'wsock32']
-    if not dynamic:
-	libs = libs + ['gdi32', 'gw32c', 'ole32', 'uuid']
-        link_args = ['-static']
-else:
-    ssl_incs, ssl_libs, libs = find_ssl()
+        ssl_incs = [os.environ.get("C_INCLUDE_DIR") or os.path.join(gnuwin32_dir, "include")]
+        ssl_libs = [os.environ.get("C_LIB_DIR") or os.path.join(gnuwin32_dir, "lib")]
+        libs = ['ssl', 'crypto', 'wsock32']
+        if not dynamic:
+            libs = libs + ['gdi32', 'gw32c', 'ole32', 'uuid']
+            link_args = ['-static']
+    else:
+        ssl_incs, ssl_libs, libs = find_ssl()
 
-if sys.version_info < (2, 6, 0):
     extra['ext_modules']=[Extension('couchapp.ssl._ssl2', ['couchapp/ssl/_ssl2.c'],
                                  include_dirs = ssl_incs + [socket_inc],
                                  library_dirs = ssl_libs,
@@ -265,8 +269,6 @@ setup(
     cmdclass=cmdclass,
 
     scripts=get_scripts(),
-
-    
 
     options = dict(py2exe={
                         'dll_excludes': [
