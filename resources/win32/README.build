@@ -26,6 +26,7 @@ Prerequities:
 		http://www.barisione.org/apps.html#add_path
 
 Build steps:
+++++++++++++
 
 1) Install prerequities, Make sure Python is in your path (http://docs.python.org/using/windows.html)
 
@@ -46,6 +47,6 @@ Build steps:
 
 (Replace 0.7.5 by the current version)
 
-Once the compilation has enned you can get the standalone installer in the output folder.
+Once the compilation has ended you can get the standalone installer in the output folder.
 
 
