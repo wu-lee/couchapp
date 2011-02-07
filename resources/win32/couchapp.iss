@@ -7,7 +7,7 @@
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{0CDA65F1-9FD8-42C5-8DD0-F65F7E8B7304}
 AppName=Couchapp
-AppVerName=Couchapp 0.7.3
+AppVerName=Couchapp 0.7.5
 AppPublisher=Benoit Chesneau
 AppPublisherURL=http://github.com/couchapp/couchapp
 AppSupportURL=http://github.com/couchapp/couchapp
@@ -16,7 +16,7 @@ DefaultDirName={pf}\Couchapp
 DefaultGroupName=Couchapp
 LicenseFile=LICENSE
 InfoAfterFile=resources\win32\postinstall.txt
-OutputBaseFilename=couchapp-0.7.3
+OutputBaseFilename=couchapp-0.7.5
 Compression=lzma
 SolidCompression=yes
 SourceDir=..\..
@@ -35,7 +35,6 @@ Source: dist\couchapp\*; DestDir: {app}; Flags: ignoreversion recursesubdirs cre
 Source: dist\add_path.exe; DestDir: {app}
 Source: dist\python27.dll; DestDir: {app}
 Source: dist\*.dll; DestDir: {app}
-
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

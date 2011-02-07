@@ -38,6 +38,8 @@ Build steps:
 
 4) Copy add_path.exe to the dist directory
 
+5) Copy the templates folder from the couchapp directory to the dist/couchapp directory
+
 5) Run the inno compiler, in your shell do:
 
 	ISCC resources\win32\couchapp.iss /dVERSION=0.7.5
