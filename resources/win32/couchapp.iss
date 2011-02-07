@@ -15,7 +15,7 @@ AppUpdatesURL=http://github.com/couchapp/couchapp
 DefaultDirName={pf}\Couchapp
 DefaultGroupName=Couchapp
 LicenseFile=LICENSE
-InfoAfterFile=contrib\win32\postinstall.txt
+InfoAfterFile=resources\win32\postinstall.txt
 OutputBaseFilename=couchapp-0.7.3
 Compression=lzma
 SolidCompression=yes
@@ -32,13 +32,8 @@ Source: dist\couchapp.exe; DestDir: {app}; Flags: ignoreversion
 Source: dist\library.zip; DestDir: {app}; Flags: ignoreversion
 Source: dist\w9xpopen.exe; DestDir: {app}; Flags: ignoreversion
 Source: dist\couchapp\*; DestDir: {app}; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: dist\Microsoft.VC*.CRT.manifest; DestDir: {app}; Flags: ignoreversion
-Source: dist\Microsoft.VC*.MFC.manifest; DestDir: {app}
-Source: dist\mfc*.dll; DestDir: {app}
-Source: dist\msvc*.dll; DestDir: {app}
 Source: dist\add_path.exe; DestDir: {app}
-Source: dist\python26.dll; DestDir: {app}
-Source: dist\*.pyd; DestDir: {app}
+Source: dist\python27.dll; DestDir: {app}
 Source: dist\*.dll; DestDir: {app}
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
