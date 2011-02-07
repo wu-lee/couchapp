@@ -20,10 +20,11 @@ except ImportError:
     from StringIO import StringIO
 
 try:
-    import ssl # python 2.6
+    from .. import ssl # python 2.6
+    have_ssl = True
 except ImportError:
-    from .. import ssl
-    
+    have_ssl = False
+
 from . import __version__ 
 from .datastructures import MultiDict
 from .errors import AlreadyRead, RequestError, RequestTimeout, \
@@ -123,6 +124,7 @@ class ClientResponse(object):
 
         if client.method == "HEAD":
             """ no body on HEAD, release the connection now """
+            self.release_connection()
             self._body = StringIO()
 
     def __getitem__(self, key):
@@ -145,7 +147,7 @@ class ClientResponse(object):
         self._closed = True
 
     def can_read(self):
-        return not self._closed and not self._already_read
+        return not self._already_read
 
     def body_string(self, charset=None, unicode_errors="strict"):
         """ return body string, by default in bytestring """
@@ -312,7 +314,7 @@ class Client(object):
     def req_is_ssl(self):
         return self.parsed_url.scheme == "ssl"
 
-    def connect(self, addr, ssl):
+    def connect(self, addr, is_ssl):
         """ create a socket """
         log.debug("create new connection")
         for res in socket.getaddrinfo(addr[0], addr[1], 0, 
@@ -321,17 +323,19 @@ class Client(object):
 
             try:
                 sck = socket.socket(af, socktype, proto)
-        
+       
                 sck.settimeout(self.timeout)
                 sck.connect(sa)
                     
-                if ssl:
+                if is_ssl:
+                    if not have_ssl:
+                        raise ValueError("https isn't supported.  On python 2.5x,"
+                                        + " https support requires ssl module "
+                                        + "(http://pypi.python.org/pypi/ssl) "
+                                        + "to be intalled.")
                     validate_ssl_args(self.ssl_args)
                     sck = ssl.wrap_socket(sck, **self.ssl_args)
                 
-                # apply connect filters
-                self.filters.apply("on_connect", self, sck, ssl)
-
                 return sck
             except socket.error:
                 close(sck)
@@ -339,13 +343,20 @@ class Client(object):
 
     def get_connection(self):
         """ get a connection from the pool or create new one. """
-        addr = parse_netloc(self.parsed_url)
-        ssl = self.req_is_ssl()
-        self._sock_key = (addr, ssl)
 
-        sock = self._manager.find_socket(addr, ssl)
+        addr = parse_netloc(self.parsed_url)
+        is_ssl = self.req_is_ssl()
+
+        # apply connect filters
+        self.filters.apply("on_connect", self, addr, is_ssl)
+        if self._sock is not None:
+            return self._sock
+ 
+        self._sock_key = (addr, is_ssl)
+
+        sock = self._manager.find_socket(addr, is_ssl)
         if sock is None:
-            sock = self.connect(addr, ssl)
+            sock = self.connect(addr, is_ssl)
         return sock
 
     def release_connection(self, key, sck, should_close=False):
@@ -358,6 +369,7 @@ class Client(object):
 
         log.debug("release connection")
         self._manager.store_socket(sck, key[0], key[1])
+        self._sock = None
 
     def close_connection(self):
         """ close a connection """
@@ -430,14 +442,19 @@ class Client(object):
             httpver = "HTTP/1.0"
 
         ua = self.headers.iget('user_agent')
+        if not ua:
+            ua = USER_AGENT 
         host = self.host
+
         accept_encoding = self.headers.iget('accept-encoding')
+        if not accept_encoding:
+            accept_encoding = 'identity'
 
         headers = [
             "%s %s %s\r\n" % (self.method, self.path, httpver),
             "Host: %s\r\n" % host,
-            "User-Agent: %s\r\n" % ua or USER_AGENT,
-            "Accept-Encoding: %s\r\n" % accept_encoding or 'identity'
+            "User-Agent: %s\r\n" % ua,
+            "Accept-Encoding: %s\r\n" % accept_encoding
         ]
 
         headers.extend(["%s: %s\r\n" % (k, str(v)) for k, v in \
@@ -468,6 +485,8 @@ class Client(object):
         log.debug("Start to perform request: %s %s %s" % (self.method,
             self.host, self.path))
 
+        self._sock = None
+
         self._original = dict( 
                 url = self.url,
                 method = self.method,
@@ -497,6 +516,17 @@ class Client(object):
                 
                 # send body
                 if self.body is not None:
+                    # handle 100-Continue status
+                    # http://www.w3.org/Protocols/rfc2616/rfc2616-sec8.html#sec8.2.3
+                    hdr_expect = self.headers.iget("expect")
+                    if hdr_expect is not None and \
+                            hdr_expect.lower() == "100-continue":
+                        resp = http.Request(http.Unreader(self._sock))
+                        if resp.status_int != 100:
+                            self.reset_request()
+                            log.debug("return response class")
+                            return self.response_class(self, resp)
+
                     chunked = self.req_is_chunked()
                     log.debug("send body (chunked: %s) %s" % (chunked,
                         type(self.body)))
@@ -520,8 +550,8 @@ class Client(object):
                 if tries <= 0:
                     raise RequestTimeout(str(e))
             except socket.error, e:
-                self.close_connection()
                 log.debug("socket error: %s" % str(e))
+                self.close_connection()
                 if e[0] not in (errno.EAGAIN, errno.ECONNABORTED, 
                         errno.EPIPE, errno.ECONNREFUSED, 
                         errno.ECONNRESET, errno.EBADF) or tries <= 0:
@@ -581,15 +611,13 @@ class Client(object):
     def get_response(self):
         """ return final respons, it is only accessible via peform
         method """
-        unreader = http.Unreader(self._sock)
-
         log.debug("Start to parse response")
+        unreader = http.Unreader(self._sock)
         while True:
-            resp = http.Request(unreader)
+            resp = http.Request(unreader, decompress=self.decompress)
             if resp.status_int != 100:
                 break
             resp.body.discard()
-            log.debug("Go 100-Continue header")
 
         log.debug("Got response: %s" % resp.status)
         log.debug("headers: [%s]" % resp.headers)

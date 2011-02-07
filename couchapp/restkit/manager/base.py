@@ -6,15 +6,12 @@
 from __future__ import with_statement
 
 from collections import deque
-import logging
 import signal
 import socket
 import threading
 import time
 
 from ..sock import close
-
-log = logging.getLogger(__name__)
 
 class ConnectionReaper(threading.Thread):
     """ connection reaper thread. Open a thread that will murder iddle
@@ -120,7 +117,6 @@ class Manager(object):
         self._lock.acquire()
         try:
             key = (addr, ssl)
-            log.debug("key %s" % str(key))
             try:
                 socks = self.sockets[key]
                 while True:
@@ -130,7 +126,6 @@ class Manager(object):
                         break
                 self.sockets[key] = socks
                 self.connections_count[key] -= 1
-                log.debug("fetch sock from pool")
                 return sck
             except (IndexError, KeyError,):
                 return None
@@ -164,7 +159,6 @@ class Manager(object):
                 socks.appendleft((fno, sck))
                 self.sockets[key] = socks
                
-                log.debug("insert sock in pool")
                 try:
                     self.connections_count[key] += 1
                 except KeyError:
