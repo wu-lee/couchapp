@@ -19,10 +19,26 @@ try:
 except ImportError:
     from StringIO import StringIO
 
+have_ssl = True
 try:
     import ssl # python 2.6
+    _ssl_wrapper = ssl.wrap_socket
 except ImportError:
-    from .. import ssl
+    try:
+        from .. import ssl
+        _ssl_wrapper = ssl.wrap_socket
+    except ImportError:
+        # we are on jython
+        if hasattr(socket, "ssl"):
+            from httplib import FakeSocket
+            from .sock import trust_all_certificates
+
+            @trust_all_certificates
+            def _ssl_wrapper(sck, **kwargs):
+                ssl_sck = socket.ssl(sck, **kwargs)
+                return FakeSocket(sck, ssl_sck)
+        else:
+            have_ssl = False
 
 from . import __version__ 
 from .datastructures import MultiDict
@@ -327,8 +343,13 @@ class Client(object):
                 sck.connect(sa)
                     
                 if is_ssl:
+                    if not have_ssl:
+                        raise ValueError("https isn't supported.  On python 2.5x,"
+                                        + " https support requires ssl module "
+                                        + "(http://pypi.python.org/pypi/ssl) "
+                                        + "to be intalled.")
                     validate_ssl_args(self.ssl_args)
-                    sck = ssl.wrap_socket(sck, **self.ssl_args)
+                    sck = _ssl_wrapper(sck, **self.ssl_args)
                 
                 return sck
             except socket.error:
