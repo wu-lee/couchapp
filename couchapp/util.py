@@ -378,7 +378,7 @@ class ShellScript(object):
         return (child_stdout.read())
         
 
-def parse_uri(uri, section):
+def parse_uri(uri):
     if uri.startswith("python:"):
         uri1 = uri.split("python:")[1]
         module_str, klass = uri1.split("#")

@@ -99,7 +99,7 @@ class Config(object):
         if not "vendors" in self.conf:
             return vendors_list
         for vendor_uri in self.conf.get('vendors'):
-            obj = util.parse_uri(vendor_uri, "couchapp.vendor")
+            obj = util.parse_uri(vendor_uri)
             vendors_list.append(obj)
         return vendors_list
         
@@ -110,7 +110,7 @@ class Config(object):
         if not "extensions" in self.conf:
             return extensions_list
         for extension_uri in self.conf.get('extensions'):
-            obj = util.parse_uri(extension_uri, "couchapp.extension")
+            obj = util.parse_uri(extension_uri)
             extensions_list.append(obj)
         return extensions_list
         
