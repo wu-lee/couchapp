@@ -13,11 +13,11 @@ This module provide a common interface for all HTTP request.
 from copy import copy
 import urlparse
 
-from .errors import ResourceNotFound, Unauthorized, RequestFailed,\
-ParserError, RequestError
-from .client import Client, ClientResponse
+from .errors import ResourceNotFound, Unauthorized, RequestFailed
+from .client import Client
 from .filters import BasicAuth
-import util as util
+from . import util
+from .wrappers import Response
 
 class Resource(object):
     """A class that can be instantiated for access to a RESTful resource, 
@@ -28,7 +28,7 @@ class Resource(object):
     encode_keys = True
     safe = "/:"
     basic_auth_url = True
-    response_class = ClientResponse
+    response_class = Response
     
     def __init__(self, uri, **client_opts):
         """Constructor for a `Resource` object.
@@ -36,7 +36,7 @@ class Resource(object):
         Resource represent an HTTP resource.
 
         :param uri: str, full uri to the server.
-        :param client_opts: `restkit.client.HttpRequest` Options
+        :param client_opts: `restkit.client.Client` Options
         """
         client_opts = client_opts or {} 
 
@@ -67,7 +67,8 @@ class Resource(object):
                 self.uri = urlparse.urlunparse((u.scheme, u.netloc.split("@")[-1],
                     u.path, u.params, u.query, u.fragment))
 
-        self.client_opts = client_opts 
+        self.client_opts = client_opts
+        self.client = Client(**self.client_opts)
         
     def __repr__(self):
         return '<%s %s>' % (self.__class__.__name__, self.uri)
@@ -183,8 +184,8 @@ class Resource(object):
                         **self.make_params(params))
         
             # make request
-            client = Client(**self.client_opts)
-            resp = client.request(uri, method=method, body=payload, 
+            
+            resp = self.client.request(uri, method=method, body=payload, 
                         headers=self.make_headers(headers))
             
             if resp is None:

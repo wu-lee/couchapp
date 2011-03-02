@@ -2,57 +2,45 @@
 #
 # This file is part of restkit released under the MIT license. 
 # See the NOTICE for more information.
-import cgi
-import copy
+import base64
 import errno
 import logging
-import mimetypes
 import os
 import time
 import socket
+import traceback
 import types
 import urlparse
-import uuid
 
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
-
-have_ssl = True
 try:
     import ssl # python 2.6
     _ssl_wrapper = ssl.wrap_socket
+    have_ssl = True
 except ImportError:
-    try:
-        from .. import ssl
-        _ssl_wrapper = ssl.wrap_socket
-    except ImportError:
-        # we are on jython
-        if hasattr(socket, "ssl"):
-            from httplib import FakeSocket
-            from .sock import trust_all_certificates
+    if hasattr(socket, "ssl"):
+        from httplib import FakeSocket
+        from .sock import trust_all_certificates
 
-            @trust_all_certificates
-            def _ssl_wrapper(sck, **kwargs):
-                ssl_sck = socket.ssl(sck, **kwargs)
-                return FakeSocket(sck, ssl_sck)
-        else:
-            have_ssl = False
+        @trust_all_certificates
+        def _ssl_wrapper(sck, **kwargs):
+            ssl_sck = socket.ssl(sck, **kwargs)
+            return FakeSocket(sck, ssl_sck)
+        have_ssl = True
+    else:
+        have_ssl = False
 
-from . import __version__ 
-from .datastructures import MultiDict
-from .errors import AlreadyRead, RequestError, RequestTimeout, \
-RedirectLimit
-from .filters import Filters
-from .forms import multipart_form_encode, form_encode
+from . import __version__
+from .conn import Connection
+from .errors import RequestError, RequestTimeout, RedirectLimit, \
+NoMoreData, ProxyError
 from .globals import get_manager 
 from . import http
 
 from .sock import close, send, sendfile, sendlines, send_chunk, \
 validate_ssl_args
-from .tee import TeeInput
-from .util import parse_netloc, to_bytestring, rewrite_location
+from .util import parse_netloc, rewrite_location
+from .wrappers import Request, Response
+
 
 MAX_CLIENT_TIMEOUT=300
 MAX_CLIENT_CONNECTIONS = 5
@@ -63,147 +51,6 @@ USER_AGENT = "restkit/%s" % __version__
 
 log = logging.getLogger(__name__)
 
-class BodyWrapper(object):
-
-    def __init__(self, resp, client):
-        self.resp = resp
-        self.body = resp._body
-        self.client = client
-        self._sock = client._sock
-        self._sock_key = copy.copy(client._sock_key)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, traceback):
-        self.close() 
-
-    def close(self):
-        """ release connection """ 
-        self.client.release_connection(self._sock_key, 
-                self._sock, self.resp.should_close)
-    
-    def __iter__(self):
-        return self
-
-    def next(self):
-        try:
-            return self.body.next()
-        except StopIteration:
-            self.close() 
-            raise
-
-    def read(self, size=None):
-        data = self.body.read(size=size)
-        if not data:
-            self.close()
-        return data
-
-    def readline(self, size=None):
-        line = self.body.readline(size=size)
-        if not line: 
-            self.close()
-        return line
-
-    def readlines(self, size=None):
-        lines = self.body.readlines(size=size)
-        if self.body.close:
-            self.close()
-        return lines
-
-
-class ClientResponse(object):
-
-    charset = "utf8"
-    unicode_errors = 'strict'
-
-    def __init__(self, client, resp):
-        self.client = client
-        self._sock = client._sock
-        self._sock_key = copy.copy(client._sock_key)
-        self._body = resp.body
-        
-        # response infos
-        self.headers = resp.headers
-        self.status = resp.status
-        self.status_int = resp.status_int
-        self.version = resp.version
-        self.headerslist = resp.headers.items()
-        self.location = resp.headers.iget('location')
-        self.final_url = client.url
-        self.should_close = resp.should_close()
-
-
-        self._closed = False
-        self._already_read = False
-
-        if client.method == "HEAD":
-            """ no body on HEAD, release the connection now """
-            self.release_connection()
-            self._body = StringIO()
-
-    def __getitem__(self, key):
-        try:
-            return getattr(self, key)
-        except AttributeError:
-            pass
-        return self.headers.iget(key)
-    
-    def __contains__(self, key):
-        return (self.headers.iget(key) is not None)
-
-    def __iter__(self):
-        return self.headers.iteritems()
-
-    def release_connection(self):
-        """ release the connection in the client or pool """
-        self.client.release_connection(self._sock_key, 
-                self._sock, self.should_close)
-        self._closed = True
-
-    def can_read(self):
-        return not self._already_read
-
-    def body_string(self, charset=None, unicode_errors="strict"):
-        """ return body string, by default in bytestring """
-       
-        if not self.can_read():
-            raise AlreadyRead() 
-
-        body = self._body.read()
-        self._already_read = True
-        
-        # release connection
-        self.release_connection()
-
-        if charset is not None:
-            try:
-                body = body.decode(charset, unicode_errors)
-            except UnicodeDecodeError:
-                pass
-        return body
-
-    def body_stream(self):
-        """ stream body """ 
-        if not self.can_read():
-            raise AlreadyRead()
-
-        self._already_read = True
-
-        return BodyWrapper(self, self.client) 
-
-    def tee(self):
-        """ copy response input to standard output or a file if length >
-        sock.MAX_BODY. This make possible to reuse it in your
-        appplication. When all the input has been read, connection is
-        released """
-        if not hasattr(self._body, "reader"):
-            # head case
-            return self._body
-
-        return TeeInput(self, self.client)
-
-
 class Client(object):
 
     """ A client handle a connection at a time. A client is threadsafe,
@@ -212,42 +59,82 @@ class Client(object):
     
     >>> from restkit import *
     >>> c = Client()
-    >>> c.url = "http://google.com"
-    >>> r = c.perform()
+    >>> r = c.request("http://google.com")
     r>>> r.status
     '301 Moved Permanently'
     >>> r.body_string()
     '<HTML><HEAD><meta http-equiv="content-type" content="text/html;charset=utf-8">\n<TITLE>301 Moved</TITLE></HEAD><BODY>\n<H1>301 Moved</H1>\nThe document has moved\n<A HREF="http://www.google.com/">here</A>.\r\n</BODY></HTML>\r\n'
     >>> c.follow_redirect = True
-    >>> r = c.perform()
+    >>> r = c.request("http://google.com")
     >>> r.status
     '200 OK'
      
     """
 
     version = (1, 1)
-    response_class=ClientResponse
+    response_class=Response
 
     def __init__(self,
             follow_redirect=False,
             force_follow_redirect=False,
             max_follow_redirect=MAX_FOLLOW_REDIRECTS,
             filters=None, 
-            decompress=True, 
+            decompress=True,
+            max_status_line_garbage=None,
+            max_header_count=0,
             manager=None,
             response_class=None,
             timeout=None,
-            force_dns=False,
+            use_proxy=False,
             max_tries=5,
             wait_tries=1.0,
             **ssl_args):
+        """
+        Client parameters
+        ~~~~~~~~~~~~~~~~~
+
+        :param follow_redirect: follow redirection, by default False
+        :param max_ollow_redirect: number of redirections available
+        :filters: http filters to pass
+        :param decompress: allows the client to decompress the response
+        body
+        :param max_status_line_garbage: defines the maximum number of ignorable
+        lines before we expect a HTTP response's status line. With
+        HTTP/1.1 persistent connections, the problem arises that broken
+        scripts could return a wrong Content-Length (there are more
+        bytes sent than specified).  Unfortunately, in some cases, this
+        cannot be detected after the bad response, but only before the
+        next one. So the client is abble to skip bad lines using this
+        limit. 0 disable garbage collection, None means unlimited number
+        of tries.
+        :param max_header_count:  determines the maximum HTTP header count
+        allowed. by default no limit.
+        :param manager: the manager to use. By default we use the global
+        one.
+        :parama response_class: the response class to use
+        :param timeout: the default timeout of the connection
+        (SO_TIMEOUT)
         
+        :param max_tries: the number of tries before we give up a
+        connection
+        :param wait_tries: number of time we wait between each tries.
+        :param ssl_args: named argument, see ssl module for more
+        informations
+        """
         self.follow_redirect = follow_redirect
         self.force_follow_redirect = force_follow_redirect
-        self.max_follow_redirect = max_follow_redirect 
-        self.filters = Filters(filters)
+        self.max_follow_redirect = max_follow_redirect  
         self.decompress = decompress
+        self.filters = filters or []
+        self.max_status_line_garbage = max_status_line_garbage
+        self.max_header_count = max_header_count
+        self.use_proxy = use_proxy
+
+        self.request_filters = []
+        self.response_filters = []
+        self.load_filters()
         
+                
         # set manager
         if manager is None:
             manager = get_manager()
@@ -274,72 +161,30 @@ class Client(object):
         self.body = None
         self.ssl_args = ssl_args or {}
         
-
-    def _headers__get(self):
-        if not isinstance(self._headers, MultiDict):
-            self._headers = MultiDict(self._headers or [])
-        return self._headers
-    def _headers__set(self, value):
-        self._headers = MultiDict(value)
-    headers = property(_headers__get, _headers__set, doc=_headers__get.__doc__)
-    
-    
-    def write_callback(self, cb):
-        if not callable(cb):
-            raise ValueError("%s isn't a callable" % str(cb))
-        self._write_cb = cb
-
-    def _url__get(self):
-        if self._url is None:
-            raise ValueError("url isn't set")
-        return urlparse.urlunparse(self._url)
-    def _url__set(self, string):
-        self._url = urlparse.urlparse(string)
-    url = property(_url__get, _url__set, doc="current url to request")
-
-    def _parsed_url__get(self):
-        if self._url is None:
-            raise ValueError("url isn't set")
-        return self._url
-    parsed_url = property(_parsed_url__get)
-
-    def _host__get(self):
-        try:
-            h = self.parsed_url.netloc.encode('ascii')
-        except UnicodeEncodeError:
-            h = self.parsed_url.netloc.encode('idna')
-        
-        hdr_host = self.headers.iget("host")
-        if not hdr_host:
-            return h
-        return hdr_host
-    host = property(_host__get)
-
-    def _path__get(self):
-        path = self.parsed_url.path or '/'
-
-        return urlparse.urlunparse(('','', path, self._url.params, 
-            self._url.query, self._url.fragment))
-    path = property(_path__get, doc="request path")
-
-    def req_is_chunked(self):
-        te = self.headers.iget("transfer-encoding")
-        return (te is not None and te.lower() == "chunked")
-
-    def req_is_ssl(self):
-        return self.parsed_url.scheme == "https"
+    def load_filters(self):
+        """ Populate filters from self.filters.
+        Must be called each time self.filters is updated.
+        """
+        for f in self.filters:
+            if hasattr(f, "on_request"):
+                self.request_filters.append(f)
+            if hasattr(f, "on_response"):
+                self.response_filters.append(f)
 
     def connect(self, addr, is_ssl):
         """ create a socket """
-        log.debug("create new connection")
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug("create new connection")
         for res in socket.getaddrinfo(addr[0], addr[1], 0, 
                 socket.SOCK_STREAM):
             af, socktype, proto, canonname, sa = res
 
             try:
                 sck = socket.socket(af, socktype, proto)
-       
-                sck.settimeout(self.timeout)
+                
+                if self.timeout is not None:
+                    sck.settimeout(self.timeout)
+
                 sck.connect(sa)
                     
                 if is_ssl:
@@ -356,310 +201,346 @@ class Client(object):
                 close(sck)
         raise socket.error, "getaddrinfo returns an empty list" 
 
-    def get_connection(self):
+    def get_connection(self, request):
         """ get a connection from the pool or create new one. """
 
-        addr = parse_netloc(self.parsed_url)
-        is_ssl = self.req_is_ssl()
+        addr = parse_netloc(request.parsed_url)
+        is_ssl = request.is_ssl()
 
-        # apply connect filters
-        self.filters.apply("on_connect", self, addr, is_ssl)
-        if self._sock is not None:
-            return self._sock
- 
-        self._sock_key = (addr, is_ssl)
+        extra_headers = []
+        sck = None
+        if self.use_proxy:
+            sck, addr, extra_headers = self.proxy_connection(request, addr, ssl)
+        if not sck:
+            sck = self._manager.find_socket(addr, is_ssl)
+            if sck is None:
+                sck = self.connect(addr, is_ssl)
 
-        sock = self._manager.find_socket(addr, is_ssl)
-        if sock is None:
-            sock = self.connect(addr, is_ssl)
-        return sock
+        # set socket timeout in case default has changed
+        if self.timeout is not None:
+            sck.settimeout(self.timeout)
 
-    def release_connection(self, key, sck, should_close=False):
-        """ release a connection to the pool """
+        connection = Connection(sck, self._manager, addr,
+                ssl=is_ssl, extra_headers=extra_headers)
+        return connection 
 
-        if should_close:
-            log.debug("close connection")
-            close(sck)
-            return
+    def proxy_connection(self, request, req_addr, ssl):
+        """ do the proxy connection """
+        proxy_settings = os.environ.get('%s_proxy' %
+                request.parsed_url.scheme)
 
-        log.debug("release connection")
-        self._manager.store_socket(sck, key[0], key[1])
-        self._sock = None
+        if proxy_settings and proxy_settings is not None:
+            proxy_settings, proxy_auth =  _get_proxy_auth(proxy_settings)
+            addr = parse_netloc(urlparse.urlparse(proxy_settings))
 
-    def close_connection(self):
-        """ close a connection """
-        log.debug("close connection")
-        close(self._sock)
-        self._sock = None
+            if ssl:
+                if proxy_auth:
+                    proxy_auth = 'Proxy-authorization: %s' % proxy_auth
+                proxy_connect = 'CONNECT %s:%s HTTP/1.0\r\n' % req_addr
 
-    def parse_body(self):
-        """ transform a body if needed and set appropriate headers """
-        if not self.body:
-            if self.method in ('POST', 'PUT',):
-                self.headers['Content-Length'] = 0
-            return
+                user_agent = request.headers.iget('user_agent')
+                if not user_agent:
+                    user_agent = "User-Agent: restkit/%s\r\n" % __version__
 
-        ctype = self.headers.iget('content-type')
-        clen = self.headers.iget('content-length')
-       
-        if isinstance(self.body, dict):
-            if ctype is not None and \
-                    ctype.startswith("multipart/form-data"):
-                type_, opts = cgi.parse_header(ctype)
-                boundary = opts.get('boundary', uuid.uuid4().hex)
-                self.body, self.headers = multipart_form_encode(self.body, 
-                                            self.headers, boundary)
+                proxy_pieces = '%s%s%s\r\n' % (proxy_connect, proxy_auth, 
+                        user_agent)
+
+                sck = self._manager.find_socket(addr, ssl)
+                if sck is None:
+                    self = self.connect(addr, ssl)
+
+                send(sck, proxy_pieces)
+                unreader = http.Unreader(sck)
+                resp = http.Request(unreader)
+                body = resp.body.read()
+                if resp.status_int != 200:
+                    raise ProxyError("Tunnel connection failed: %d %s" %
+                            (resp.status_int, body))
+
+                return sck, addr, []
             else:
-                ctype = "application/x-www-form-urlencoded; charset=utf-8"
-                self.body = form_encode(self.body)
-        elif hasattr(self.body, "boundary"):
-            ctype = "multipart/form-data; boundary=%s" % self.body.boundary
-            clen = self.body.get_size()
+                headers = []
+                if proxy_auth:
+                    headers = [('Proxy-authorization', proxy_auth)]
 
-        if not ctype:
-            ctype = 'application/octet-stream'
-            if hasattr(self.body, 'name'):
-                ctype =  mimetypes.guess_type(self.body.name)[0]
-        
-        if not clen:
-            if hasattr(self.body, 'fileno'):
-                try:
-                    self.body.flush()
-                except IOError:
-                    pass
-                try:
-                    fno = self.body.fileno()
-                    clen = str(os.fstat(fno)[6])
-                except  IOError:
-                    if not self.req_is_chunked():
-                        clen = len(self.body.read())
-            elif hasattr(self.body, 'getvalue') and not \
-                    self.req_is_chunked():
-                clen = len(self.body.getvalue())
-            elif isinstance(self.body, types.StringTypes):
-                self.body = to_bytestring(self.body)
-                clen = len(self.body)
+                sck = self._manager.find_socket(addr, ssl)
+                if sck is None:
+                    sck = self.connect(addr, ssl)
+                return sck, addr, headers
+        return None, req_addr, []
 
-        if clen is not None:
-            self.headers['Content-Length'] = clen
-        elif not self.req_is_chunked():
-            raise RequestError("Can't determine content length and " +
-                    "Transfer-Encoding header is not chunked")
-
-        if ctype is not None:
-            self.headers['Content-Type'] = ctype
-
-    def make_headers_string(self):
+    def make_headers_string(self, request, extra_headers=None):
         """ create final header string """
+        headers = request.headers.copy()
+        if extra_headers is not None:
+            for k, v in extra_headers:
+                headers[k] = v
+
+        if not request.body and request.method in ('POST', 'PUT',):
+            headers['Content-Length'] = 0
+
         if self.version == (1,1):
             httpver = "HTTP/1.1"
         else:
             httpver = "HTTP/1.0"
 
-        ua = self.headers.iget('user_agent')
+        ua = headers.iget('user_agent')
         if not ua:
             ua = USER_AGENT 
-        host = self.host
+        host = request.host
 
-        accept_encoding = self.headers.iget('accept-encoding')
+        accept_encoding = headers.iget('accept-encoding')
         if not accept_encoding:
             accept_encoding = 'identity'
 
-        headers = [
-            "%s %s %s\r\n" % (self.method, self.path, httpver),
+        lheaders = [
+            "%s %s %s\r\n" % (request.method, request.path, httpver),
             "Host: %s\r\n" % host,
             "User-Agent: %s\r\n" % ua,
             "Accept-Encoding: %s\r\n" % accept_encoding
         ]
 
-        headers.extend(["%s: %s\r\n" % (k, str(v)) for k, v in \
-                self.headers.items() if k.lower() not in \
+        lheaders.extend(["%s: %s\r\n" % (k, str(v)) for k, v in \
+                headers.items() if k.lower() not in \
                 ('user-agent', 'host', 'accept-encoding',)])
-
-        log.debug("Send headers: %s" % headers)
-        return "%s\r\n" % "".join(headers)
-
-    def reset_request(self):
-        """ reset a client handle to its intial state before performing.
-        It doesn't handle case where body has already been consumed """
-        if self._original is None:
-            return
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug("Send headers: %s" % lheaders)
+        return "%s\r\n" % "".join(lheaders)
         
-        self.url = self._original["url"] 
-        self.method = self._original["method"]
-        self.body = self._original["body"]
-        self.headers = self._original["headers"]
-        self._nb_redirections = self.max_follow_redirect
-        
-    def perform(self):
+    def perform(self, request):
         """ perform the request. If an error happen it will first try to
         restart it """
-        if not self.url:
-            raise RequestError("url isn't set")
 
-        log.debug("Start to perform request: %s %s %s" % (self.method,
-            self.host, self.path))
-
-        self._sock = None
-
-        self._original = dict( 
-                url = self.url,
-                method = self.method,
-                body = self.body,
-                headers = self.headers
-       ) 
-
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug("Start to perform request: %s %s %s" %
+                    (request.host, request.method, request.path))
+                
         tries = self.max_tries
         wait = self.wait_tries
         while tries > 0:
             try:
-                # generate final body
-                self.parse_body()
-                
                 # get or create a connection to the remote host
-                self._sock = self.get_connection()
-                
-                # set socket timeout in case default has changed
-                self._sock.settimeout(self.timeout)
-                
-                # apply on_request filters
-                self.filters.apply("on_request", self)
-                
+                connection = self.get_connection(request)
+                sck = connection.socket()
+
                 # send headers
-                headers_str = self.make_headers_string()
-                self._sock.sendall(headers_str)
+                headers_str = self.make_headers_string(request,
+                        connection.extra_headers)
+                sck.sendall(headers_str)
                 
                 # send body
-                if self.body is not None:
+                if request.body is not None:
+                    chunked = request.is_chunked()
+                    if request.headers.iget('content-length') is None and \
+                            not chunked:
+                        raise RequestError(
+                                "Can't determine content length and " +
+                                "Transfer-Encoding header is not chunked")
+
+
                     # handle 100-Continue status
                     # http://www.w3.org/Protocols/rfc2616/rfc2616-sec8.html#sec8.2.3
-                    hdr_expect = self.headers.iget("expect")
+                    hdr_expect = request.headers.iget("expect")
                     if hdr_expect is not None and \
                             hdr_expect.lower() == "100-continue":
                         resp = http.Request(http.Unreader(self._sock))
                         if resp.status_int != 100:
                             self.reset_request()
-                            log.debug("return response class")
-                            return self.response_class(self, resp)
+                            if log.isEnabledFor(logging.DEBUG):
+                                log.debug("return response class")
+                            return self.response_class(connection,
+                                    request, resp)
 
-                    chunked = self.req_is_chunked()
-                    log.debug("send body (chunked: %s) %s" % (chunked,
-                        type(self.body)))
+                    chunked = request.is_chunked()
+                    if log.isEnabledFor(logging.DEBUG):
+                        log.debug("send body (chunked: %s)" % chunked)
 
-                    if hasattr(self.body, 'read'):
-                        if hasattr(self.body, 'seek'): self.body.seek(0)
-                        sendfile(self._sock, self.body, chunked)
-                    elif isinstance(self.body, types.StringTypes):
-                        send(self._sock, self.body, chunked)
+                    if hasattr(request.body, 'read'):
+                        if hasattr(request.body, 'seek'): request.body.seek(0)
+                        sendfile(sck, request.body, chunked)
+                    elif isinstance(request.body, types.StringTypes):
+                        send(sck, request.body, chunked)
                     else:
-                        sendlines(self._sock, self.body, chunked)
+                        sendlines(sck, request.body, chunked)
                     if chunked:
-                        send_chunk(self._sock, "")
+                        send_chunk(sck, "")
                 
-                return self.get_response()
+                return self.get_response(request, connection)
             except socket.gaierror, e:
-                self.close_connection()
+                try:
+                    connection.close()
+                except:
+                    pass
+
                 raise RequestError(str(e))
             except socket.timeout, e:
-                self.close_connection()
+                try:
+                    connection.close()
+                except:
+                    pass
+
                 if tries <= 0:
                     raise RequestTimeout(str(e))
             except socket.error, e:
-                log.debug("socket error: %s" % str(e))
-                self.close_connection()
+                if log.isEnabledFor(logging.DEBUG):
+                    log.debug("socket error: %s" % str(e))
+                try:
+                    connection.close()
+                except:
+                    pass
+
                 if e[0] not in (errno.EAGAIN, errno.ECONNABORTED, 
                         errno.EPIPE, errno.ECONNREFUSED, 
                         errno.ECONNRESET, errno.EBADF) or tries <= 0:
-                    raise RequestError(str(e))
+                    raise RequestError("socker.error: %s" % str(e))
             except (KeyboardInterrupt, SystemExit):
                 break
-            except Exception, e:
+            except (StopIteration, NoMoreData):
+                connection.close()
+                if tries <= 0:
+                    raise
+                else:
+                    if request.body is not None:
+                        if not hasattr(request.body, 'read') and \
+                                not isinstance(request.body, types.StringTypes):
+                            raise RequestError("connection closed and can't"
+                                    + "be resent")
+	    except:
                 # unkown error
-                self.close_connection()
+                log.debug("unhandled exception %s" %
+                        traceback.format_exc())
                 raise
-
+            
             # time until we retry.
             time.sleep(wait)
             wait = wait * 2
             tries = tries - 1
 
-            # reset request
-            self.reset_request()
 
     def request(self, url, method='GET', body=None, headers=None):
         """ perform immediatly a new request """
-        self.url = url
-        self.method = method
-        self.body = body
-        self.headers = copy.copy(headers) or []
-        self._nb_redirections = self.max_follow_redirect
-        return self.perform()
 
-    def redirect(self, resp, location, method=None):
+        request = Request(url, method=method, body=body,
+                headers=headers)
+        
+        # apply request filters
+        # They are applied only once time.
+        for f in self.request_filters:
+            ret = f.on_request(request)
+            if isinstance(ret, Response):
+                # a response instance has been provided.
+                # just return it. Useful for cache filters
+                return ret
+
+        # no response has been provided, do the request
+        self._nb_redirections = self.max_follow_redirect
+        return self.perform(request)
+
+    def redirect(self, resp, location, request):
         """ reset request, set new url of request and perform it """
         if self._nb_redirections <= 0:
             raise RedirectLimit("Redirection limit is reached")
 
-        if self._initial_url is None:
-            self._initial_url = self.url
+        if request.initial_url is None:
+            request.initial_url = self.url
 
         # discard response body and reset request informations
         if hasattr(resp, "_body"):
             resp._body.discard()
         else:
             resp.body.discard()
-        self.reset_request()
 
         # make sure location follow rfc2616
-        location = rewrite_location(self.url, location)
-        
-        log.debug("Redirect to %s" % location)
+        location = rewrite_location(request.url, location)
+       
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug("Redirect to %s" % location)
 
         # change request url and method if needed
-        self.url = location
-        if method is not None:
-            self.method = "GET"
+        request.url = location
 
         self._nb_redirections -= 1
-        return self.perform()
 
-    def get_response(self):
+        #perform a new request
+        return self.perform(request)
+
+    def get_response(self, request, connection):
         """ return final respons, it is only accessible via peform
         method """
-        log.debug("Start to parse response")
-        unreader = http.Unreader(self._sock)
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug("Start to parse response")
+
+        unreader = http.Unreader(connection.socket())
         while True:
-            resp = http.Request(unreader, decompress=self.decompress)
+            resp = http.Request(unreader, decompress=self.decompress,
+                    max_status_line_garbage=self.max_status_line_garbage,
+                    max_header_count=self.max_header_count)
             if resp.status_int != 100:
                 break
             resp.body.discard()
 
-        log.debug("Got response: %s" % resp.status)
-        log.debug("headers: [%s]" % resp.headers)
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug("Got response: %s" % resp.status)
+            log.debug("headers: [%s]" % resp.headers)
         
         location = resp.headers.iget('location')
 
         if self.follow_redirect:
             if resp.status_int in (301, 302, 307,):
-                if self.method in ('GET', 'HEAD',) or \
+                if request.method in ('GET', 'HEAD',) or \
                         self.force_follow_redirect:
                     if hasattr(self.body, 'read'):
                         try:
                             self.body.seek(0)
                         except AttributeError:
+                            connection.release()
                             raise RequestError("Can't redirect %s to %s "
                                     "because body has already been read"
                                     % (self.url, location))
-                    return self.redirect(resp, location)
+                    connection.release()
+                    return self.redirect(resp, location, request)
 
             elif resp.status_int == 303 and self.method == "POST":
-                return self.redirect(resp, location, method="GET")
-       
-        # apply final response
-        self.filters.apply("on_response", self, resp)
-        
-        # reset request
-        self.reset_request()
+                connection.release()
+                request.method = "GET"
+                request.body = None
+                return self.redirect(resp, location, request)
 
-        log.debug("return response class")
-        return self.response_class(self, resp)
+        # create response object
+        resp = self.response_class(connection, request, resp)
+
+        # apply response filters
+        for f in self.response_filters:
+            f.on_response(resp, request)
+
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug("return response class")
+
+        # return final response
+        return resp
+
+
+def _get_proxy_auth(proxy_settings):
+    proxy_username = os.environ.get('proxy-username')
+    if not proxy_username:
+        proxy_username = os.environ.get('proxy_username')
+    proxy_password = os.environ.get('proxy-password')
+    if not proxy_password:
+        proxy_password = os.environ.get('proxy_password')
+
+    proxy_password = proxy_password or ""
+
+    if not proxy_username:
+        u = urlparse.urlparse(proxy_settings)
+        if u.username:
+            proxy_password = u.password or proxy_password 
+            proxy_settings = urlparse.urlunparse((u.scheme, 
+                u.netloc.split("@")[-1], u.path, u.params, u.query, 
+                u.fragment))
+    
+    if proxy_username:
+        user_auth = base64.encodestring('%s:%s' % (proxy_username,
+                                    proxy_password))
+        return proxy_settings, 'Basic %s\r\n' % (user_auth.strip())
+    else:
+        return proxy_settings, ''

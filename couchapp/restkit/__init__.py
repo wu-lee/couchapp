@@ -3,18 +3,17 @@
 # This file is part of restkit released under the MIT license. 
 # See the NOTICE for more information.
 
-
-
-version_info = (3, 0, 4)
+version_info = (3, 2, 0)
 __version__ =  ".".join(map(str, version_info))
 
 try:
     from .errors import ResourceNotFound, Unauthorized, RequestFailed,\
 RedirectLimit, RequestError, InvalidUrl, ResponseError, ProxyError, ResourceError
-    from .client import Client, ClientResponse, MAX_FOLLOW_REDIRECTS
+    from .client import Client, MAX_FOLLOW_REDIRECTS
+    from .wrappers import Request, Response, ClientResponse
     from .resource import Resource
     from .manager import Manager 
-    from .filters import BasicAuth, SimpleProxy, OAuthFilter
+    from .filters import BasicAuth, OAuthFilter
 except ImportError:
     import traceback
     traceback.print_exc()
@@ -59,17 +58,39 @@ def request(url,
     :param method: str, by default GET. http verbs
     :param body: the body, could be a string, an iterator or a file-like object
     :param headers: dict or list of tupple, http headers
-    :pool intance: instance inherited from `restkit.pool.PoolInterface`. 
-    It allows you to share and reuse connections connections.
-    :param follow_redirect: boolean, by default is false. If true, 
-    if the HTTP status is 301, 302 or 303 the client will follow
-    the location.
-    :param filters: list, list of http filters. see the doc of http filters 
-    for more info
-    :param ssl_args: ssl arguments. See http://docs.python.org/library/ssl.html
-    for more information.
+
+    Client parameters
+    ~~~~~~~~~~~~~~~~~
+
+    :param follow_redirect: follow redirection, by default False
+    :param max_ollow_redirect: number of redirections available
+    :filters: http filters to pass
+    :param decompress: allows the client to decompress the response
+    body
+    :param max_status_line_garbage: defines the maximum number of ignorable
+    lines before we expect a HTTP response's status line. With
+    HTTP/1.1 persistent connections, the problem arises that broken
+    scripts could return a wrong Content-Length (there are more
+    bytes sent than specified).  Unfortunately, in some cases, this
+    cannot be detected after the bad response, but only before the
+    next one. So the client is abble to skip bad lines using this
+    limit. 0 disable garbage collection, None means unlimited number
+    of tries.
+    :param max_header_count:  determines the maximum HTTP header count
+    allowed. by default no limit.
+    :param manager: the manager to use. By default we use the global
+    one.
+    :parama response_class: the response class to use
+    :param timeout: the default timeout of the connection
+    (SO_TIMEOUT)
     
+    :param max_tries: the number of tries before we give up a
+    connection
+    :param wait_tries: number of time we wait between each tries.
+    :param ssl_args: ssl named arguments, 
+    See http://docs.python.org/library/ssl.html informations
     """
+
     # detect credentials from url
     u = urlparse.urlparse(url)
     if u.username is not None:
