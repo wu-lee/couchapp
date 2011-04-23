@@ -45,6 +45,10 @@ exports.init = function(req) {
       var p = req.path, parts = ['', p[0], p[1] , p[2]];
       return makePath(concatArgs(parts, arguments));
     },
+    attachment : function() {
+      var p = req.path, parts = ['', p[0]];
+      return makePath(concatArgs(parts, arguments));
+    },
     show : function() {
       var p = req.path, parts = ['', p[0], p[1] , p[2], '_show'];
       return makePath(concatArgs(parts, arguments));
