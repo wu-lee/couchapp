@@ -16,6 +16,7 @@ import webbrowser
 
 try:
     import desktopcouch
+    from desktopcouch.application import local_files
 except ImportError:
     desktopcouch = None
 
@@ -140,7 +141,7 @@ class LocalDoc(object):
             if not desktopcouch:
                 raise AppError("Desktopcouch isn't available on this"+
                     "machine. You can't access to %s" % url)
-            ctx = desktopcouch.local_files.DEFAULT_CONTEXT
+            ctx = local_files.DEFAULT_CONTEXT
             bookmark_file = os.path.join(ctx.db_dir, "couchdb.html")
             try:
                 username, password = re.findall("<!-- !!([^!]+)!!([^!]+)!! -->", 
