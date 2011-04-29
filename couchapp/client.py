@@ -12,6 +12,7 @@ import types
 
 try:
     import desktopcouch
+    from desktopcouch.application import local_files
 except ImportError:
     desktopcouch = None
 
@@ -193,8 +194,8 @@ class Database(object):
                     "machine. You can't access to %s" % uri)
             uri = "http://localhost:%s/%s" % (
                 desktopcouch.find_port(), uri[15:])
-            ctx = desktopcouch.local_files.DEFAULT_CONTEXT
-            oauth_tokens = desktopcouch.local_files.get_oauth_tokens(ctx)
+            ctx = local_files.DEFAULT_CONTEXT
+            oauth_tokens = local_files.get_oauth_tokens(ctx)
 
             consumer = oauth.Consumer(oauth_tokens["consumer_key"],
                     oauth_tokens["consumer_secret"])
