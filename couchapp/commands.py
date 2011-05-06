@@ -13,6 +13,7 @@ except ImportError:
 
 
 from couchapp import clone_app
+from couchapp.autopush.command import autopush
 from couchapp.errors import ResourceNotFound, AppError, BulkSaveError
 from couchapp import generator
 from couchapp.localdoc import document
@@ -428,6 +429,11 @@ table = {
         (browse,
         [],
         "[COUCHAPPDIR] DEST"),
+    "autopush":
+        (autopush,
+        [('', 'no-atomic', False, "send attachments one by one"),
+        ('', 'update-delay', 60, "time between each update")],
+        "[OPTION]... [COUCHAPPDIR] DEST"),
     "help":
         (usage, [], ""),
     "version":

@@ -2,6 +2,9 @@ include LICENSE
 include NOTICE
 include README.md
 include THANKS.txt
+recursive-include couchapp/autopush/*
+recursive-include couchapp/autopush/watchdog *
 recursive-include couchapp/templates *
 recursive-include tests/testapp *
 recursive-include resources *
+recursive-include doc *

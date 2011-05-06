@@ -14,18 +14,78 @@ from distutils.sysconfig import get_python_lib
 from distutils.cmd import Command
 from distutils.command.build import build
 from distutils.command.install_data import install_data
+from imp import load_source
+
 import os
 import sys
 
-from couchapp import __version__
-
 if not hasattr(sys, 'version_info') or sys.version_info < (2, 6, 0, 'final'):
     raise SystemExit("Couchapp requires Python 2.6 or later.")
+
 
 executables = []
 setup_requires = []
 extra = {}
 
+SELECT_BACKPORT_MACROS = []
+
+if "linux" in sys.platform:
+    SELECT_BACKPORT_MACROS.append(("HAVE_EPOLL", 1))
+    SELECT_BACKPORT_MACROS.append(("HAVE_SYS_EPOLL_H", 1))
+elif "darwin" in sys.platform or "bsd" in sys.platform:
+    SELECT_BACKPORT_MACROS.append(("HAVE_KQUEUE", 1))
+    SELECT_BACKPORT_MACROS.append(("HAVE_SYS_EVENT_H", 1))
+else:
+    pass
+
+SELECT_BACKPORT_SOURCES = [
+        os.path.join('couchapp','autopush','select_backportmodule.c')]
+
+if len(SELECT_BACKPORT_MACROS) > 0:
+    extra['ext_modules'] = [
+        Extension("couchapp.autopush.select_backport", 
+            sources=SELECT_BACKPORT_SOURCES,
+            define_macros = SELECT_BACKPORT_MACROS,
+            )]
+
+if "darwin" in sys.platform:
+    WATCHDOG_SRC_DIR = os.path.join('couchapp', 'autopush', 'watchdog')
+
+
+    watchdog_version = load_source('version',
+                          os.path.join(WATCHDOG_SRC_DIR, 'version.py'))
+
+
+    _watchdog_fsevents_sources = [
+        os.path.join(WATCHDOG_SRC_DIR, '_watchdog_fsevents.c'),
+        os.path.join(WATCHDOG_SRC_DIR, '_watchdog_util.c'),
+    ]
+    
+    extra['ext_modules'].append(
+            Extension(name='_watchdog_fsevents',
+                sources=_watchdog_fsevents_sources,
+                libraries=['m'],
+                define_macros=[
+                    ('WATCHDOG_VERSION_STRING',
+                        '"' + watchdog_version.VERSION_STRING + '"'),
+                    ('WATCHDOG_VERSION_MAJOR', watchdog_version.VERSION_MAJOR),
+                    ('WATCHDOG_VERSION_MINOR', watchdog_version.VERSION_MINOR),
+                    ('WATCHDOG_VERSION_BUILD', watchdog_version.VERSION_BUILD),
+                    ],
+                extra_link_args=[
+                    '-framework', 'CoreFoundation',
+                    '-framework', 'CoreServices',
+                    ],
+                extra_compile_args=[
+                    '-std=c99',
+                    '-pedantic',
+                    '-Wall',
+                    '-Wextra',
+                    '-fPIC',
+                    ]
+                ))
+            
+    
 def get_data_files():
     data_files = []
     data_files.append(('couchapp', 
@@ -49,10 +109,16 @@ def get_packages_data():
                 packagedata['couchapp'].append(f)
     return packagedata 
 
-def all_packages():
-    return [
+MODULES = [
         'couchapp',
-        'couchapp.ext',
+        'couchapp.autopush',
+        'couchapp.autopush.brownie',
+        'couchapp.autopush.brownie.datastructures',
+        'couchapp.autopush.pathtools',
+        'couchapp.autopush.watchdog',
+        'couchapp.autopush.watchdog.observers',
+        'couchapp.autopush.watchdog.tricks',
+        'couchapp.autopush.watchdog.utils',
         'couchapp.hooks',
         'couchapp.hooks.compress',
         'couchapp.restkit',
@@ -61,6 +127,17 @@ def all_packages():
         'couchapp.simplejson',
         'couchapp.vendors',
         'couchapp.vendors.backends',
+    ]
+
+CLASSIFIERS = [
+        'License :: OSI Approved :: Apache Software License',
+        'Intended Audience :: Developers',
+        'Intended Audience :: System Administrators',
+        'Development Status :: 4 - Beta',
+        'Programming Language :: Python',
+        'Operating System :: OS Independent',
+        'Topic :: Database',
+        'Topic :: Utilities',
     ]
 
 def get_scripts():
@@ -167,52 +244,62 @@ def find_library_file(compiler, libname, std_dirs, paths):
 
 
 cmdclass = {'install_data': install_package_data }
- 
-setup(
-    name = 'Couchapp',
-    version = __version__,
-    url = 'http://github.com/couchapp/couchapp/tree/master',
-    license =  'Apache License 2',
-    author = 'Benoit Chesneau',
-    author_email = 'benoitc@e-engura.org',
-    description = 'Standalone CouchDB Application Development Made Simple.',
-    long_description = """CouchApp is a set of helpers and a jQuery plugin
-    that conspire to get you up and running on CouchDB quickly and
-    correctly. It brings clarity and order to the freedom of CouchDB's
-    document-based approach.""",
-    keywords = 'couchdb couchapp',
-    platforms = ['any'],
-    classifiers = [
-        'License :: OSI Approved :: Apache Software License',
-        'Intended Audience :: Developers',
-        'Intended Audience :: System Administrators',
-        'Development Status :: 4 - Beta',
-        'Programming Language :: Python',
-        'Operating System :: OS Independent',
-        'Topic :: Database',
-        'Topic :: Utilities',
-    ],
 
-    packages = all_packages(),
-    package_data = get_packages_data(),
-    data_files=get_data_files(),
 
-    cmdclass=cmdclass,
+def main():
+    couchapp = load_source("couchapp", os.path.join("couchapp",
+        "__init__.py"))
 
-    scripts=get_scripts(),
+    # read long description
+    with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as f:
+        long_description = f.read()
 
-    options = dict(py2exe={
-                        'dll_excludes': [
-                            "kernelbase.dll",
-                            "powrprof.dll" 
-                        ]
-                   },
+    PACKAGES = {}
+    for name in MODULES:
+        PACKAGES[name] = name.replace(".", "/")
 
-                   bdist_mpkg=dict(zipdist=True,
-                                   license='LICENSE',
-                                   readme='resources/macosx/Readme.html',
-                                   welcome='resources/macosx/Welcome.html')
-    ),
- 
-    **extra
-)
+    DATA_FILES = [
+        ('couchapp', ["LICENSE", "MANIFEST.in", "NOTICE", "README.rst",
+                        "THANKS",])
+        ]
+
+
+    options = dict(
+            name = 'Couchapp',
+            version = couchapp.__version__,
+            url = 'http://github.com/couchapp/couchapp/tree/master',
+            license =  'Apache License 2',
+            author = 'Benoit Chesneau',
+            author_email = 'benoitc@e-engura.org',
+            description = 'Standalone CouchDB Application Development Made Simple.',
+            long_description = long_description,
+            keywords = 'couchdb couchapp',
+            platforms = ['any'],
+            classifiers = CLASSIFIERS,
+            packages = PACKAGES.keys(),
+            package_dir = PACKAGES,
+            data_files = DATA_FILES,
+            package_data = get_packages_data(),
+            #cmdclass=cmdclass,
+            scripts=get_scripts(),
+            options = dict(py2exe={
+                                'dll_excludes': [
+                                    "kernelbase.dll",
+                                    "powrprof.dll" 
+                                ]
+                           },
+
+                           bdist_mpkg=dict(zipdist=True,
+                                           license='LICENSE',
+                                           readme='resources/macosx/Readme.html',
+                                           welcome='resources/macosx/Welcome.html')
+            )
+    )
+    options.update(extra)
+    setup(**options)
+
+if __name__ == "__main__":
+    main()
+
+
+
