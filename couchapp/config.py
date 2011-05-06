@@ -20,9 +20,9 @@ class Config(object):
         extensions = [],
         hooks = {},
         vendors = [
-            "python:couchapp.vendors.backends.git#GitVendor",
-            "python:couchapp.vendors.backends.hg#HgVendor",
-            "python:couchapp.vendors.backends.couchdb#CouchdbVendor"
+            "couchapp.vendors.backends.git:GitVendor",
+            "couchapp.vendors.backends.hg:HgVendor",
+            "couchapp.vendors.backends.couchdb:CouchdbVendor"
         ]
     )
     
@@ -98,8 +98,8 @@ class Config(object):
         vendors_list = []
         if not "vendors" in self.conf:
             return vendors_list
-        for vendor_uri in self.conf.get('vendors'):
-            obj = util.parse_uri(vendor_uri)
+        for uri in self.conf.get('vendors'):
+            obj = util.load_py(uri)
             vendors_list.append(obj)
         return vendors_list
         
@@ -109,9 +109,9 @@ class Config(object):
         extensions_list = []
         if not "extensions" in self.conf:
             return extensions_list
-        for extension_uri in self.conf.get('extensions'):
-            obj = util.parse_uri(extension_uri)
-            extensions_list.append(obj)
+        for uri in self.conf.get('extensions'):
+            script = util.load_py(extension_uri)
+            extensions_list.append(script)
         return extensions_list
         
     @property
@@ -120,10 +120,9 @@ class Config(object):
         if not "hooks" in self.conf:
             return hooks
         for hooktype, hooks_uris in self.conf.get("hooks").items():
-            objs = []
-            for hook_uri in hooks_uris:
-                obj = util.parse_hooks_uri(hook_uri)
-                objs.append(obj)
+            scripts = []
+            for uri in hooks_uris:
+                scripts.append(util.hook_uri(uri))
             hooks[hooktype] = objs
         return hooks
         

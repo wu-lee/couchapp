@@ -25,7 +25,8 @@ logger = logging.getLogger(__name__)
 def hook(conf, path, hook_type, *args, **kwargs):
     if hook_type in conf.hooks:
         for h in conf.hooks.get(hook_type):
-            h(path, hook_type, *args, **kwargs)
+            if hasattr(h, 'hook'):
+                h.hook(path, hook_type, *args, **kwargs)
 
 def init(conf, path, *args, **opts):
     if not args:

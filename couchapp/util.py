@@ -7,6 +7,7 @@ from __future__ import with_statement
 
 import codecs
 from hashlib import md5
+import imp
 import logging
 import os
 import re
@@ -39,6 +40,43 @@ try:#python 2.6, use subprocess
 except ImportError:
     subprocess = None
     popen3 = os.popen3
+
+try:
+    from importlibe import import_module
+except ImportError:
+    def _resolve_name(name, package, level):
+        """Return the absolute name of the module to be imported."""
+        if not hasattr(package, 'rindex'):
+            raise ValueError("'package' not set to a string")
+        dot = len(package)
+        for x in xrange(level, 1, -1):
+            try:
+                dot = package.rindex('.', 0, dot)
+            except ValueError:
+                raise ValueError("attempted relative import beyond top-level "
+                                  "package")
+        return "%s.%s" % (package[:dot], name)
+
+
+    def import_module(name, package=None):
+        """Import a module.
+
+        The 'package' argument is required when performing a relative import. It
+        specifies the package to use as the anchor point from which to resolve the
+        relative import to an absolute import.
+
+        """
+        if name.startswith('.'):
+            if not package:
+                raise TypeError("relative imports require the 'package' argument")
+            level = 0
+            for character in name:
+                if character != '.':
+                    break
+                level += 1
+            name = _resolve_name(name[level:], package, level)
+        __import__(name)
+        return sys.modules[name]
     
 if os.name == 'nt':
     from win32com.shell import shell, shellcon
@@ -355,46 +393,49 @@ def vendor_dir():
 def expandpath(path):
     return os.path.expanduser(os.path.expandvars(path))
 
+def load_py(uri, cfg):
+    if os.path.exists(uri):
+        name, ext = os.path.splitext(os.path.basename(uri))
+        script = imp.load_source(name, self.script_uri)
+    else:
+        if ":" in self.script_uri:
+            parts = self.script_uri.rsplit(":", 1)
+            name, objname = parts[0], parts[1]
+            mod = import_module(name)
 
+            script_class = getattr(mod, objname)
+            if inspect.getargspec(script_class.__init__) > 1:
+                script = script_class(cfg)
+            else:
+                script=script_class()
+    script.__dict__['__couchapp_cfg__'] = cfg
+    return script
 
 class ShellScript(object):
     """ simple object used to manage extensions or hooks from external
     scripts in any languages """
-    
+     
     def __init__(self, cmd):
-        self.cmd = cmd
+        self.cmd = uri
         
-    def __call__(self, *args, **options):
+    def hook(self, *args, **options):
         cmd = self.cmd + " "
         
-        # cmd += " ".join(
-        #     ["--%s=%s" % (k, v) for k, v in options.items()] +
-        #     list(args)
-        # )
+        # pass parameters
+        cmd += " ".join(
+             ["%s=%s" % (k, v) for k, v in options.items()] +
+             list(args) 
+        )
         (child_stdin, child_stdout, child_stderr) = popen3(cmd)
         err = child_stderr.read()
         if err:
             raise ScriptError(str(err))
         return (child_stdout.read())
-        
 
-def parse_uri(uri):
-    if uri.startswith("python:"):
-        uri1 = uri.split("python:")[1]
-        module_str, klass = uri1.split("#")
-        components = module_str.split('.')
-
-        mod = __import__(module_str)
-        for comp in components[1:]:
-            mod = getattr(mod, comp)
-        return getattr(mod, klass)
-    else:
-        raise RuntimeError("extension uri invalid")
-        
-def parse_hooks_uri(uri):
-    if uri.startswith("python:"):
-        return parse_uri(uri, "couchapp.hook")
-    return ShellScript(uri)
+def hook_uri(uri, cfg):
+    if uri.startswith('sh:'):
+        return ShellScript(uri[3:])
+    return load_py(uri, cfg)
 
 re_comment = re.compile(r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"', 
         re.DOTALL | re.MULTILINE)
