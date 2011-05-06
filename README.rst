@@ -58,7 +58,8 @@ Getting started
 
 Read the `tutorial <http://www.couchapp.org/page/getting-started>`_.
 
-## Other resources
+Other resources
+---------------
 
 * `Couchapp website <http://couchapp.org>`_
 * `Frequently Asked Questions <http://couchapp.org/page/faq>`_
