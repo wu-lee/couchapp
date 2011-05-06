@@ -99,7 +99,7 @@ class Config(object):
         if not "vendors" in self.conf:
             return vendors_list
         for uri in self.conf.get('vendors'):
-            obj = util.load_py(uri)
+            obj = util.load_py(uri, self)
             vendors_list.append(obj)
         return vendors_list
         
@@ -110,7 +110,7 @@ class Config(object):
         if not "extensions" in self.conf:
             return extensions_list
         for uri in self.conf.get('extensions'):
-            script = util.load_py(extension_uri)
+            script = util.load_py(uri, self)
             extensions_list.append(script)
         return extensions_list
         
@@ -119,10 +119,10 @@ class Config(object):
         hooks = {}
         if not "hooks" in self.conf:
             return hooks
-        for hooktype, hooks_uris in self.conf.get("hooks").items():
+        for hooktype, uris in self.conf.get("hooks").items():
             scripts = []
-            for uri in hooks_uris:
-                scripts.append(util.hook_uri(uri))
+            for uri in uris:
+                scripts.append(util.hook_uri(uri, self))
             hooks[hooktype] = objs
         return hooks
         

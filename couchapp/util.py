@@ -398,8 +398,8 @@ def load_py(uri, cfg):
         name, ext = os.path.splitext(os.path.basename(uri))
         script = imp.load_source(name, self.script_uri)
     else:
-        if ":" in self.script_uri:
-            parts = self.script_uri.rsplit(":", 1)
+        if ":" in uri:
+            parts = uri.rsplit(":", 1)
             name, objname = parts[0], parts[1]
             mod = import_module(name)
 
@@ -408,6 +408,8 @@ def load_py(uri, cfg):
                 script = script_class(cfg)
             else:
                 script=script_class()
+        else:
+            script = import_module(uri)
     script.__dict__['__couchapp_cfg__'] = cfg
     return script
 
