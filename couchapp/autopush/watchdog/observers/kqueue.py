@@ -103,6 +103,7 @@ if platform.is_bsd() or platform.is_darwin():
 
     from ...pathtools.path import absolute_path
 
+    
     from .api import \
         BaseObserver, \
         EventEmitter, \
@@ -144,7 +145,7 @@ if platform.is_bsd() or platform.is_darwin():
         select.KQ_NOTE_RENAME | \
         select.KQ_NOTE_REVOKE
 
-
+    
     # Flag tests.
     def is_deleted(kev):
         """Determines whether the given kevent represents deletion."""
