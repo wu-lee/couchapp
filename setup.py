@@ -12,6 +12,7 @@ except ImportError:
 from distutils.core import Extension
 from distutils.sysconfig import get_python_lib
 from distutils.cmd import Command
+from distutils.command import build_ext
 from distutils.command.build import build
 from distutils.command.install_data import install_data
 from imp import load_source
@@ -189,58 +190,42 @@ class install_package_data(install_data):
         install_data.finalize_options(self)
 
 
-# ssl build
+class my_build_ext(build_ext.build_ext):
+    def initialize_options(self):
+        build_ext.build_ext.initialize_options(self)
 
-def find_file(filename, std_dirs, paths):
-    """Searches for the directory where a given file is located,
-    and returns a possibly-empty list of additional directories, or None
-    if the file couldn't be found at all.
 
-    'filename' is the name of a file, such as readline.h or libcrypto.a.
-    'std_dirs' is the list of standard system directories; if the
-        file is found in one of them, no additional directives are needed.
-    'paths' is a list of additional locations to check; if the file is
-        found in one of them, the resulting list will contain the directory.
-    """
-
-    # Check the standard locations
-    for dir in std_dirs:
-        f = os.path.join(dir, filename)
-        print 'looking for', f
-        if os.path.exists(f): return []
-
-    # Check the additional directories
-    for dir in paths:
-        f = os.path.join(dir, filename)
-        print 'looking for', f
-        if os.path.exists(f):
-            return [dir]
-
-    # Not found anywhere
-    return None
-
-def find_library_file(compiler, libname, std_dirs, paths):
-    result = compiler.find_library_file(std_dirs + paths, libname)
-    if result is None:
-        return None
-
-    # Check whether the found file is in one of the standard directories
-    dirname = os.path.dirname(result)
-    for p in std_dirs:
-        # Ensure path doesn't end with path separator
-        p = p.rstrip(os.sep)
-        if p == dirname:
-            return [ ]
-
-    # Otherwise, it must have been in one of the additional directories,
-    # so we have to figure out which one.
-    for p in paths:
-        # Ensure path doesn't end with path separator
-        p = p.rstrip(os.sep)
-        if p == dirname:
-            return [p]
-    else:
-        assert False, "Internal error: Path not found in std_dirs or paths"
+    def build_extension(self, ext):
+        result = build_ext.build_ext.build_extension(self, ext)
+        # hack: create a symlink from build/../select_backport.so to
+        # couchapp/autopush/select_backport.so
+        try:
+            fullname = self.get_ext_fullname(ext.name)
+            modpath = fullname.split('.')
+            filename = self.get_ext_filename(ext.name)
+            filename = os.path.split(filename)[-1]
+            if not self.inplace:
+                filename = os.path.join(*modpath[:-1] + [filename])
+                path_to_build_core_so = os.path.abspath(
+                        os.path.join(self.build_lib, filename))
+                path_to_core_so = os.path.abspath(
+                        os.path.join('couchapp', 'autopush',
+                            os.path.basename(path_to_build_core_so)))
+                if path_to_build_core_so != path_to_core_so:
+                    try:
+                        os.unlink(path_to_core_so)
+                    except OSError:
+                        pass
+                    if hasattr(os, 'symlink'):
+                        print 'Linking %s to %s' % (path_to_build_core_so, path_to_core_so)
+                        os.symlink(path_to_build_core_so, path_to_core_so)
+                    else:
+                        print 'Copying %s to %s' % (path_to_build_core_so, path_to_core_so)
+                        import shutil
+                        shutil.copyfile(path_to_build_core_so, path_to_core_so)
+        except Exception:
+            traceback.print_exc()
+        return result
 
 
 cmdclass = {'install_data': install_package_data }
@@ -280,7 +265,7 @@ def main():
             package_dir = PACKAGES,
             data_files = DATA_FILES,
             package_data = get_packages_data(),
-            #cmdclass=cmdclass,
+            cmdclass = {'build_ext': my_build_ext},
             scripts=get_scripts(),
             options = dict(py2exe={
                                 'dll_excludes': [

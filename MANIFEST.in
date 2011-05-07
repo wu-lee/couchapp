@@ -1,7 +1,7 @@
 include LICENSE
 include NOTICE
-include README.md
-include THANKS.txt
+include README.rst
+include THANKS
 recursive-include couchapp/autopush/*
 recursive-include couchapp/autopush/watchdog *
 recursive-include couchapp/templates *
