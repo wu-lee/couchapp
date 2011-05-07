@@ -422,12 +422,7 @@ class ShellScript(object):
         
     def hook(self, *args, **options):
         cmd = self.cmd + " "
-        
-        # pass parameters
-        cmd += " ".join(
-             ["%s=%s" % (k, v) for k, v in options.items()] +
-             list(args) 
-        )
+
         (child_stdin, child_stdout, child_stderr) = popen3(cmd)
         err = child_stderr.read()
         if err:
@@ -435,9 +430,13 @@ class ShellScript(object):
         return (child_stdout.read())
 
 def hook_uri(uri, cfg):
-    if uri.startswith('sh:'):
-        return ShellScript(uri[3:])
-    return load_py(uri, cfg)
+    if isinstance(uri, list):
+        (script_type, script_uri) = uri
+        if script_type == "py":
+            return load_py(script_uri, cfg)
+    else:
+        script_uri = uri
+    return ShellScript(script_uri)
 
 re_comment = re.compile(r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"', 
         re.DOTALL | re.MULTILINE)
