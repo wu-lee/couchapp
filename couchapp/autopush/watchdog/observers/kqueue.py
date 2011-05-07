@@ -83,8 +83,7 @@ Collections and Utility Classes
 """
 
 from __future__ import with_statement
-from ..utils import \
-    platform #, has_attribute
+from ..utils import platform
 
 if platform.is_bsd() or platform.is_darwin():
     import threading
@@ -94,8 +93,6 @@ if platform.is_bsd() or platform.is_darwin():
     import os
 
     # See the notes for this module in the documentation above ^.
-    #import select
-    #if not has_attribute(select, 'kqueue') or sys.version_info < (2, 7, 0):
     if sys.version_info < (2, 7, 0):
         import couchapp.autopush._select as select
     else:

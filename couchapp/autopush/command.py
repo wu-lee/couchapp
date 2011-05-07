@@ -144,7 +144,7 @@ class CouchappWatcher(object):
                 log.info("unhandled exception in main loop:\n%s" %
                         traceback.format_exc())
                 sys.exit(-1)
-        observer.join()
+        self.observer.join()
 
     def halt(self):
         self.observer.stop()

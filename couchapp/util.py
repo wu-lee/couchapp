@@ -8,6 +8,7 @@ from __future__ import with_statement
 import codecs
 from hashlib import md5
 import imp
+import inspect
 import logging
 import os
 import re
@@ -396,7 +397,7 @@ def expandpath(path):
 def load_py(uri, cfg):
     if os.path.exists(uri):
         name, ext = os.path.splitext(os.path.basename(uri))
-        script = imp.load_source(name, self.script_uri)
+        script = imp.load_source(name, uri)
     else:
         if ":" in uri:
             parts = uri.rsplit(":", 1)
@@ -418,7 +419,7 @@ class ShellScript(object):
     scripts in any languages """
      
     def __init__(self, cmd):
-        self.cmd = uri
+        self.cmd = cmd
         
     def hook(self, *args, **options):
         cmd = self.cmd + " "
