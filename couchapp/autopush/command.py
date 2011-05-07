@@ -11,9 +11,12 @@ import sys
 import time
 import traceback
 
+from .pathtools.path import absolute_path
 from .watchdog.observers import Observer
 from .watchdog.events import FileSystemEventHandler
+from .watchdog.utils import has_attribute
 
+from ..errors import AppError
 from ..localdoc import document
 from .. import util
 
@@ -47,23 +50,26 @@ class CouchappEventHandler(FileSystemEventHandler):
                 return True
         return False
 
-
-    def on_any_event(self, ev):
-        if not self.check_ignore(ev.src_path):
-            self.last_update = time.time()
-            self.maybe_update()
-
     def maybe_update(self):
         if not self.last_update:
             return
 
         diff = time.time() - self.last_update
         if diff >= self.update_delay:
-            log.info("Push change")
             self.doc.push(self.dbs, noatomic=self.noatomic, 
                     noindex=True)
             self.last_update = None
 
+    def dispatch(self, ev):
+        if has_attribute(ev, 'dest_path') and \
+                (self.check_ignore(ev.src_path) or \
+                self.check_ignore(ev.dest_path)):
+            return
+        elif self.check_ignore(ev.src_path):
+            return
+
+        self.last_update = time.time()
+        self.maybe_update()
 
 class CouchappWatcher(object):
 
@@ -72,6 +78,7 @@ class CouchappWatcher(object):
         lambda x: getattr(signal, "SIG%s" % x),
         "QUIT INT TERM".split()
     )
+
     SIG_NAMES = dict(
         (getattr(signal, name), name[3:].lower()) for name in dir(signal)
         if name[:3] == "SIG" and name[3] != "_"
@@ -79,13 +86,12 @@ class CouchappWatcher(object):
 
     def __init__(self, doc, dbs, update_delay=DEFAULT_UPDATE_DELAY, 
             noatomic=False):
-        self.doc = doc
+        self.doc_path = absolute_path(doc.docdir)
         self.event_handler = CouchappEventHandler(doc, dbs,
                 update_delay=update_delay, noatomic=noatomic)
-
         self.observer = Observer()
-        self.observer.schedule(self.event_handler, path=doc.docdir, 
-                recursive=True)
+        self.observer.schedule(self.event_handler,
+                self.doc_path, recursive=True)
 
     def init_signals(self):
         """\
@@ -98,7 +104,6 @@ class CouchappWatcher(object):
     def signal(self, sig, frame):
         if len(self.SIG_QUEUE) < 5:
             self.SIG_QUEUE.append(sig)
-            self.wakeup()
         else:
             log.warn("Dropping signal: %s" % sig)
 
@@ -115,26 +120,24 @@ class CouchappWatcher(object):
         raise StopIteration
 
     def run(self):
-        log.info("Starting to listen changes in '%s'", self.doc.docdir)
+        log.info("Starting to listen changes in '%s'", self.doc_path)
+        self.init_signals()
         self.observer.start()
         while True:
             try:
                 sig = self.SIG_QUEUE.pop(0) if len(self.SIG_QUEUE) else None
                 if sig is None:
                     self.event_handler.maybe_update() 
-                    time.sleep(1)
-                    continue
-                if sig not in self.SIG_NAMES:
-                    self.log.info("Ignoring unknown signal: %s" % sig)
-                    continue
-
-                signame = self.SIG_NAMES.get(sig)
-                handler = getattr(self, "handle_%s" % signame, None)
-                if not handler:
-                    log.error("Unhandled signal: %s" % signame)
-                    continue
-                log.info("handling signal: %s" % signame)
-                handler()
+                elif sig in self.SIG_NAMES:
+                    signame = self.SIG_NAMES.get(sig)
+                    handler = getattr(self, "handle_%s" % signame, None)
+                    if not handler:
+                        log.error("Unhandled signal: %s" % signame)
+                        continue
+                    log.info("handling signal: %s" % signame)
+                    handler()
+                else:
+                    log.info("Ignoring unknown signal: %s" % sig)
                 time.sleep(1)
             except StopIteration:
                 self.halt()
