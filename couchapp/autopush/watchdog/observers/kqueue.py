@@ -97,7 +97,7 @@ if platform.is_bsd() or platform.is_darwin():
     #import select
     #if not has_attribute(select, 'kqueue') or sys.version_info < (2, 7, 0):
     if sys.version_info < (2, 7, 0):
-        import couchapp.autopush.select_backport as select
+        import couchapp.autopush._select as select
     else:
         import select
 

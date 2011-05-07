@@ -34,11 +34,11 @@ else:
     pass
 
 SELECT_BACKPORT_SOURCES = [
-        os.path.join('couchapp','autopush','select_backportmodule.c')]
+        os.path.join('couchapp','autopush','selectmodule.c')]
 
 if len(SELECT_BACKPORT_MACROS) > 0:
     extra['ext_modules'] = [
-        Extension("couchapp.autopush.select_backport", 
+        Extension("couchapp.autopush._select", 
             sources=SELECT_BACKPORT_SOURCES,
             define_macros = SELECT_BACKPORT_MACROS,
             )]
