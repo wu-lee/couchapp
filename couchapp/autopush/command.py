@@ -18,7 +18,7 @@ from .watchdog.utils import has_attribute
 
 from ..errors import AppError
 from ..localdoc import document
-from .. import util
+from ..util import json, remove_comments
 
 log = logging.getLogger(__name__)
 
@@ -29,23 +29,21 @@ class CouchappEventHandler(FileSystemEventHandler):
     def __init__(self, doc, dbs, update_delay=DEFAULT_UPDATE_DELAY, 
             noatomic=False):
         super(CouchappEventHandler, self).__init__()
+
         self.update_delay = update_delay
         self.doc = doc
         self.dbs = dbs
         self.noatomic = noatomic
         self.last_update = None
+
         ignorefile = os.path.join(doc.docdir, '.couchappignore')
         if os.path.exists(ignorefile):
-            # A .couchappignore file is a json file containing a
-            # list of regexps for things to skip
             with open(ignorefile, 'r') as f:
-                self.ignores = util.json.loads(
-                    util.remove_comments(f.read())
-                )
+                self.ignores = json.loads(remove_comments(f.read()))
 
     def check_ignore(self, item):
-        for i in self.ignores:
-            match = re.match(i, item)
+        for ign in self.ignores:
+            match = re.match(ign, item)
             if match:
                 return True
         return False
@@ -61,11 +59,8 @@ class CouchappEventHandler(FileSystemEventHandler):
             self.last_update = None
 
     def dispatch(self, ev):
-        if has_attribute(ev, 'dest_path') and \
-                (self.check_ignore(ev.src_path) or \
-                self.check_ignore(ev.dest_path)):
-            return
-        elif self.check_ignore(ev.src_path):
+        log.info("got change")
+        if self.check_ignore(ev.src_path):
             return
 
         self.last_update = time.time()
@@ -75,14 +70,13 @@ class CouchappWatcher(object):
 
     SIG_QUEUE = []
     SIGNALS = map(
-        lambda x: getattr(signal, "SIG%s" % x),
-        "QUIT INT TERM".split()
-    )
+            lambda x: getattr(signal, "SIG%s" % x),
+            "QUIT INT TERM".split())
 
     SIG_NAMES = dict(
-        (getattr(signal, name), name[3:].lower()) for name in dir(signal)
-        if name[:3] == "SIG" and name[3] != "_"
-    )
+            (getattr(signal, name), name[3:].lower()) \
+                    for name in dir(signal) \
+                    if name[:3] == "SIG" and name[3] != "_")
 
     def __init__(self, doc, dbs, update_delay=DEFAULT_UPDATE_DELAY, 
             noatomic=False):
@@ -100,7 +94,7 @@ class CouchappWatcher(object):
         """
         map(lambda s: signal.signal(s, self.signal), self.SIGNALS)
         signal.signal(signal.SIGCHLD, self.handle_chld)
-    
+
     def signal(self, sig, frame):
         if len(self.SIG_QUEUE) < 5:
             self.SIG_QUEUE.append(sig)
@@ -153,7 +147,6 @@ class CouchappWatcher(object):
         self.observer.stop()
         sys.exit(0)                
 
-
 def autopush(conf, path, *args, **opts):
     doc_path = None
     dest = None
@@ -174,7 +167,9 @@ def autopush(conf, path, *args, **opts):
             docid=opts.get('docid'))
     dbs = conf.get_dbs(dest)
 
-    watcher = CouchappWatcher(doc, dbs,
-            update_delay=opts.get('update_delay', DEFAULT_UPDATE_DELAY),
-            noatomic=opts.get('no_atomic', False))
+    update_delay = opts.get('update_delay', DEFAULT_UPDATE_DELAY)
+    noatomic = opts.get('no_atomic', False)
+
+    watcher = CouchappWatcher(doc, dbs, update_delay=update_delay,
+            noatomic=onoatomic)
     watcher.run()
