@@ -3,13 +3,7 @@
 # This file is part of couchapp released under the Apache 2 license. 
 # See the NOTICE for more information.
 
-try:
-    from setuptools import setup, Extension
-except ImportError:
-    from distutils.core import Extension
-
-
-from distutils.core import Extension
+from distutils.core import setup, Extension
 from distutils.sysconfig import get_python_lib
 from distutils.cmd import Command
 from distutils.command import build_ext

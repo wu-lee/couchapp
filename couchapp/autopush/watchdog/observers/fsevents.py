@@ -29,7 +29,7 @@
 """
 
 from __future__ import with_statement
-from .utils import platform
+from ..utils import platform
 
 if platform.is_darwin():
     import threading
