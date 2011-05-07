@@ -96,6 +96,7 @@ class CouchappWatcher(object):
         signal.signal(signal.SIGCHLD, self.handle_chld)
 
     def signal(self, sig, frame):
+        print "got a signal"
         if len(self.SIG_QUEUE) < 5:
             self.SIG_QUEUE.append(sig)
         else:
