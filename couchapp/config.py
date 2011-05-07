@@ -37,7 +37,6 @@ class Config(object):
         self.conf = self.global_conf.copy()
         self.conf.update(self.local_conf)
 
-        
     def load(self, path, default=None):
         """ load config """
         conf = default

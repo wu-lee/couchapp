@@ -40,7 +40,7 @@ To install or upgrade to the latest released version of couchapp::
 
     $ pip install couchapp
 
-On OSX 10.6/10.7 set ARCH_FLAGS::
+On OSX 10.6/10.7 you may need to set ARCH_FLAGS::
 
     $ env ARCHFLAGS="-arch i386 -arch x86_64" pip install couchapp
 
