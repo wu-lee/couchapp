@@ -19,10 +19,12 @@ from .. import util
 
 log = logging.getLogger(__name__)
 
+DEFAULT_UPDATE_DELAY = 5 # update delay in seconds
 
 class CouchappEventHandler(FileSystemEventHandler):
 
-    def __init__(self, doc, dbs, update_delay=60, noatomic=False):
+    def __init__(self, doc, dbs, update_delay=DEFAULT_UPDATE_DELAY, 
+            noatomic=False):
         super(CouchappEventHandler, self).__init__()
         self.update_delay = update_delay
         self.doc = doc
@@ -75,7 +77,8 @@ class CouchappWatcher(object):
         if name[:3] == "SIG" and name[3] != "_"
     )
 
-    def __init__(self, doc, dbs, update_delay=60, noatomic=False):
+    def __init__(self, doc, dbs, update_delay=DEFAULT_UPDATE_DELAY, 
+            noatomic=False):
         self.doc = doc
         self.event_handler = CouchappEventHandler(doc, dbs,
                 update_delay=update_delay, noatomic=noatomic)
@@ -169,6 +172,6 @@ def autopush(conf, path, *args, **opts):
     dbs = conf.get_dbs(dest)
 
     watcher = CouchappWatcher(doc, dbs,
-            update_delay=opts.get('update_delay', 60),
+            update_delay=opts.get('update_delay', DEFAULT_UPDATE_DELAY),
             noatomic=opts.get('no_atomic', False))
     watcher.run()
