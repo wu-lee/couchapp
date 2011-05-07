@@ -48,7 +48,7 @@ if len(SELECT_BACKPORT_MACROS) > 0:
             define_macros = SELECT_BACKPORT_MACROS,
             )]
 
-if "darwin" in sys.platform:
+"""if "darwin" in sys.platform:
     WATCHDOG_SRC_DIR = os.path.join('couchapp', 'autopush', 'watchdog')
 
 
@@ -83,7 +83,7 @@ if "darwin" in sys.platform:
                     '-Wextra',
                     '-fPIC',
                     ]
-                ))
+                ))"""
             
     
 def get_data_files():
