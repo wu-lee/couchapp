@@ -16,7 +16,10 @@ import webbrowser
 
 try:
     import desktopcouch
-    from desktopcouch.application import local_files
+    try:
+        from desktopcouch.application import local_files
+    except ImportError:
+        from desktopcouch import local_files
 except ImportError:
     desktopcouch = None
 
