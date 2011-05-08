@@ -67,8 +67,7 @@ Other resources
 
 * `Couchapp website <http://couchapp.org>`_
 * `Frequently Asked Questions <http://couchapp.org/page/faq>`_
-* `couchapp command line usage
-  <http://couchapp.org/page/couchapp-usage>`_
-* `Extend couchapp command line`<http://couchapp.org/page/couchapp-extend>`_
-* `List of CouchApps `<http://couchapp.org/page/list-of-couchapps>`_
+* `couchapp command line usage <http://couchapp.org/page/couchapp-usage>`_
+* `Extend couchapp command line <http://couchapp.org/page/couchapp-extend>`_
+* `List of CouchApps <http://couchapp.org/page/list-of-couchapps>`_
 
