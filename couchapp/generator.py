@@ -193,7 +193,13 @@ def find_template_dir(name, directory=''):
         modpath = __file__
         
     default_locations = [os.path.join(os.path.dirname(modpath), p, 
-                        directory) for p in paths]
+                        directory) for p in paths],
+
+    if sys.platform != "win32" and os.name != "nt":
+        default_locations.extendd([
+            "/usr/share/couchapp/%s" % directory,
+            "/usr/local/share/couchapp/%s" % directory,
+            "/opt/couchapp/%s" % directory])
 
     if sys.platform == "darwin":
         home = os.path.expanduser('~'),
