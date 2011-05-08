@@ -204,7 +204,6 @@ def find_template_dir(name, directory=''):
     default_locations.extend([os.path.join(os.path.dirname(modpath), p, 
                         directory) for p in paths])
 
-    
     if sys.platform == "darwin":
         home = os.path.expanduser('~'),
         data_path = "%s/Library/Application Support/Couchapp" % home

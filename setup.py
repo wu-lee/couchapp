@@ -9,8 +9,8 @@ from distutils.cmd import Command
 from distutils.command import build_ext
 from distutils.command.build import build
 from distutils.command.install_data import install_data
+import glob
 from imp import load_source
-
 import os
 import sys
 
@@ -82,14 +82,15 @@ if len(SELECT_BACKPORT_MACROS) > 0:
                     '-fPIC',
                     ]
                 ))"""
-            
-    
+
+
 def get_data_files():
     data_files = []
     data_files.append(('couchapp', 
                        ["LICENSE", "MANIFEST.in", "NOTICE", "README.md", 
                         "THANKS.txt",]))
     return data_files
+
 
 def ordinarypath(p):
     return p and p[0] != '.' and p[-1] != '~'
@@ -261,7 +262,9 @@ def main():
             package_dir = PACKAGES,
             data_files = DATA_FILES,
             package_data = get_packages_data(),
-            cmdclass = {'build_ext': my_build_ext},
+            cmdclass = {
+                'build_ext': my_build_ext,
+                'install_data': install_package_data},
             scripts=get_scripts(),
             options = dict(py2exe={
                                 'dll_excludes': [
