@@ -22,6 +22,9 @@ executables = []
 setup_requires = []
 extra = {}
 
+couchapp = load_source("couchapp", os.path.join("couchapp",
+        "__init__.py"))
+
 SELECT_BACKPORT_MACROS = []
 
 if "linux" in sys.platform:
@@ -170,7 +173,7 @@ if os.name == "nt" or sys.platform == "win32":
         extra['console'] = [{
              'script': os.path.join("resources", "scripts", "couchapp"),
              'copyright':'Copyright (C) 2008-2011 Benoît Chesneau and others',
-             'product_version': __version__ 
+             'product_version': couchapp.__version__ 
         }]
 
 
@@ -226,8 +229,7 @@ cmdclass = {'install_data': install_package_data }
 
 
 def main():
-    couchapp = load_source("couchapp", os.path.join("couchapp",
-        "__init__.py"))
+    
 
     # read long description
     with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as f:
