@@ -7,6 +7,7 @@ import logging
 import time
 
 from . import DEFAULT_UPDATE_DELAY
+from .handler import CouchappEventHandler
 from .pathtools.path import absolute_path
 from .watchdog.observers import Observer
 
