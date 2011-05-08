@@ -441,4 +441,4 @@ table = {
 }
 
 withcmd = ['generate', 'vendor']
-incouchapp = ['init', 'push', 'generate', 'vendor']
+incouchapp = ['init', 'push', 'generate', 'vendor', 'autopush']
