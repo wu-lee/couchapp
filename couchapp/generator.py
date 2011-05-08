@@ -215,7 +215,7 @@ def find_template_dir(name, directory=''):
         user_locations = []
         for user_location in user_path():
             user_locations.append(os.path.join(user_location, name, directory))
-        default_locations = user_locations + default_locations
+        default_locations = user_locations + list(default_locations)
 
     found = False
     for location in default_locations:
