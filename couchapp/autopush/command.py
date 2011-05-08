@@ -96,7 +96,6 @@ class CouchappWatcher(object):
         signal.signal(signal.SIGCHLD, self.handle_chld)
 
     def signal(self, sig, frame):
-        print "got a signal"
         if len(self.SIG_QUEUE) < 5:
             self.SIG_QUEUE.append(sig)
         else:
@@ -143,6 +142,28 @@ class CouchappWatcher(object):
                 return -1 
         self.observer.join()
 
+class WinCouchappWatcher(object):
+    def __init__(self, doc, dbs, update_delay=DEFAULT_UPDATE_DELAY, 
+            noatomic=False):
+        self.doc_path = absolute_path(doc.docdir)
+        self.event_handler = CouchappEventHandler(doc, dbs,
+                update_delay=update_delay, noatomic=noatomic)
+        self.observer = Observer()
+        self.observer.schedule(self.event_handler,
+                self.doc_path, recursive=True)
+
+    def run(self):
+        log.info("Starting to listen changes in '%s'", self.doc_path)
+        self.observer.start()
+        try:
+            while True:
+                self.event_handler.maybe_update()
+                time.sleep(1)
+        except (SystemExit, KeyboardInterrupt):
+            self.observer.stop()
+        self.observer.join()
+
+
 def autopush(conf, path, *args, **opts):
     doc_path = None
     dest = None
@@ -166,6 +187,11 @@ def autopush(conf, path, *args, **opts):
     update_delay = int(opts.get('update_delay', DEFAULT_UPDATE_DELAY))
     noatomic = opts.get('no_atomic', False)
 
-    watcher = CouchappWatcher(doc, dbs, update_delay=update_delay,
+    if sys.platform == "win32" or os.name == "nt":
+        watcher_class = WinCouchappWatcher
+    else:
+        watcher_class = CouchappWatcher
+
+    watcher = watcher_class(doc, dbs, update_delay=update_delay,
             noatomic=noatomic)
     watcher.run()

@@ -35,7 +35,7 @@ Build steps:
 3) In couchapp sources, execute following command lines:
 
 	python setup.py build -c mingw32
-	python setup.py py2exe -b
+	python setup.py py2exe -b 2 
 
 4) Copy add_path.exe to the dist directory
 
