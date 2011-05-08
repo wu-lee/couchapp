@@ -54,12 +54,12 @@ class CouchappEventHandler(FileSystemEventHandler):
 
         diff = time.time() - self.last_update
         if diff >= self.update_delay:
+            log.info("synchronize changes")
             self.doc.push(self.dbs, noatomic=self.noatomic, 
                     noindex=True)
             self.last_update = None
 
     def dispatch(self, ev):
-        log.info("got change")
         if self.check_ignore(ev.src_path):
             return
 
@@ -134,19 +134,14 @@ class CouchappWatcher(object):
                 else:
                     log.info("Ignoring unknown signal: %s" % sig)
                 time.sleep(1)
-            except StopIteration:
-                self.halt()
-            except KeyboardInterrupt:
-                self.halt()
+            except (StopIteration, KeyboardInterrupt):
+                self.observer.stop()
+                return 0
             except Exception, e:
                 log.info("unhandled exception in main loop:\n%s" %
                         traceback.format_exc())
-                sys.exit(-1)
+                return -1 
         self.observer.join()
-
-    def halt(self):
-        self.observer.stop()
-        sys.exit(0)                
 
 def autopush(conf, path, *args, **opts):
     doc_path = None
@@ -168,9 +163,9 @@ def autopush(conf, path, *args, **opts):
             docid=opts.get('docid'))
     dbs = conf.get_dbs(dest)
 
-    update_delay = opts.get('update_delay', DEFAULT_UPDATE_DELAY)
+    update_delay = int(opts.get('update_delay', DEFAULT_UPDATE_DELAY))
     noatomic = opts.get('no_atomic', False)
 
     watcher = CouchappWatcher(doc, dbs, update_delay=update_delay,
-            noatomic=onoatomic)
+            noatomic=noatomic)
     watcher.run()

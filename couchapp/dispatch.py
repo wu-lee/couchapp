@@ -167,6 +167,3 @@ def parseopts(args, options, state):
             state[name] = True
         
     return args
-
-if __name__ in ('__main__', 'couchapp.dispatch'):
-    run()
