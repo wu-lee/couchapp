@@ -196,10 +196,12 @@ def find_template_dir(name, directory=''):
                         directory) for p in paths],
 
     if sys.platform != "win32" and os.name != "nt":
-        default_locations.extendd([
-            "/usr/share/couchapp/%s" % directory,
-            "/usr/local/share/couchapp/%s" % directory,
-            "/opt/couchapp/%s" % directory])
+        system_locations = (
+            "/usr/share/couchapp/templates/%s" % directory,
+            "/usr/local/share/couchapp/templates/%s" % directory,
+            "/opt/couchapp/templates/%s" % directory)
+
+        default_locations = system_locations + default_locations
 
     if sys.platform == "darwin":
         home = os.path.expanduser('~'),
@@ -207,7 +209,7 @@ def find_template_dir(name, directory=''):
         home_locations = ["%s/%s/%s" % (data_path, p, directory) \
                 for p in paths]
         
-        default_locations = home_locations + default_locations 
+        default_locations = home_locations + list(default_locations)
    
     if directory:
         user_locations = []
