@@ -87,8 +87,8 @@ if len(SELECT_BACKPORT_MACROS) > 0:
 def get_data_files():
     data_files = []
     data_files.append(('couchapp', 
-                       ["LICENSE", "MANIFEST.in", "NOTICE", "README.md", 
-                        "THANKS.txt",]))
+                       ["LICENSE", "MANIFEST.in", "NOTICE", "README.rst",
+                        "THANKS",]))
     return data_files
 
 
@@ -100,13 +100,13 @@ def get_packages_data():
 
     for root in ('templates',):
         for curdir, dirs, files in os.walk(os.path.join("couchapp", root)):
-            print curdir
             curdir = curdir.split(os.sep, 1)[1]
             dirs[:] = filter(ordinarypath, dirs)
             for f in filter(ordinarypath, files):
-                f = os.path.join(curdir, f)
+                f = os.path.normpath(os.path.join(curdir, f))
                 packagedata['couchapp'].append(f)
     return packagedata 
+
 
 MODULES = [
         'couchapp',
@@ -146,6 +146,22 @@ def get_scripts():
             "couchapp.bat"))
     return scripts
 
+DATA_FILES = get_data_files()
+
+
+def get_py2exe_datafiles():
+    datapath = os.path.join('couchapp', 'templates')
+    head, tail = os.path.split(datapath)
+    d = dict(get_data_files())
+    for root, dirs, files in os.walk(datapath):
+        files = [os.path.join(root, filename) for filename in files]
+        root = root.replace(tail, datapath)
+        root = root[root.index(datapath):]
+        d[root] = files
+    return d.items()
+
+
+
 if os.name == "nt" or sys.platform == "win32":
     # py2exe needs to be installed to work
     try:
@@ -180,6 +196,8 @@ if os.name == "nt" or sys.platform == "win32":
 
     except ImportError:
         raise SystemExit('You need py2exe installed to run Couchapp.')
+
+    DATA_FILES = get_py2exe_datafiles()
 
 class install_package_data(install_data):
     def finalize_options(self):
@@ -228,10 +246,7 @@ class my_build_ext(build_ext.build_ext):
 
 cmdclass = {'install_data': install_package_data }
 
-
 def main():
-    
-
     # read long description
     with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as f:
         long_description = f.read()
@@ -239,12 +254,6 @@ def main():
     PACKAGES = {}
     for name in MODULES:
         PACKAGES[name] = name.replace(".", "/")
-
-    DATA_FILES = [
-        ('couchapp', ["LICENSE", "MANIFEST.in", "NOTICE", "README.rst",
-                        "THANKS",])
-        ]
-
 
     options = dict(
             name = 'Couchapp',
