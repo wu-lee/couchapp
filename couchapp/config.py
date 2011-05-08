@@ -122,7 +122,7 @@ class Config(object):
             scripts = []
             for uri in uris:
                 scripts.append(util.hook_uri(uri, self))
-            hooks[hooktype] = objs
+            hooks[hooktype] = scripts
         return hooks
         
     # TODO: add oauth management
