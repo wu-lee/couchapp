@@ -1,6 +1,8 @@
 *.gem
 *.swp
 *.pyc
+*.so
+*.pyo
 Couchapp.egg-info
 couchapp.egg-info
 build
