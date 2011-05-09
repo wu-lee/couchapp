@@ -405,9 +405,12 @@ def load_py(uri, cfg):
             mod = import_module(name)
 
             script_class = getattr(mod, objname)
-            if inspect.getargspec(script_class.__init__) > 1:
-                script = script_class(cfg)
-            else:
+            try:
+                if inspect.getargspec(script_class.__init__) > 1:
+                    script = script_class(cfg)
+                else:
+                    script=script_class()
+            except TypeError:
                 script=script_class()
         else:
             script = import_module(uri)
