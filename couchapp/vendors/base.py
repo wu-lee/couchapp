@@ -8,8 +8,11 @@ import os
 import shutil
 import tempfile
 
-from couchapp.errors import VendorError
-from couchapp import util
+from .backends.couchdb import CouchdbVendor
+from .backends.git import GitVendor
+from .backends.hg import HgVendor
+from ..errors import VendorError
+from .. import util
 
 logger = logging.getLogger(__name__)
 
@@ -18,19 +21,10 @@ def _tempdir():
     os.unlink(fname)
     return fname
     
-class BackendVendor(object):
-    """ vendor backend interface """
-    url = "",
-    license =  "",
-    author = "",
-    author_email = "",
-    description = ""
-    long_description = ""
-    
-    scheme = None
-    
-    def fetch(url, path, *args, **opts):
-        raise NotImplementedError
+VENDORS = [
+    CouchdbVendor,
+    GitVendor,
+    HgVendor]
     
 class Vendor(object):
     """ Vendor object to manage vendors in a couchapp """
@@ -55,12 +49,12 @@ class Vendor(object):
         
         """
         scheme = {}
-        for vendor_obj in self.conf.vendors:
-            if not hasattr(vendor_obj, 'fetch') or \
-                    not hasattr(vendor_obj, 'scheme'):
+        for vendor_class in VENDORS:
+            if not hasattr(vendor_class, 'fetch') or \
+                    not hasattr(vendor_class, 'scheme'):
                 continue
-            for s in getattr(vendor_obj, 'scheme'):
-                scheme[s] = vendor_obj
+            for s in getattr(vendor_class, 'scheme'):
+                scheme[s] = vendor_class()
         return scheme
         
     def find_handler(self, uri):

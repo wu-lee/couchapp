@@ -9,6 +9,7 @@ from .client import Database
 from .errors import AppError
 from . import util
 
+
 class Config(object):
     """ main object to read configuration from ~/.couchapp.conf or 
     .couchapprc/couchapp.json in the couchapp folder.
@@ -18,12 +19,8 @@ class Config(object):
     DEFAULTS = dict(
         env = {},
         extensions = [],
-        hooks = {},
-        vendors = [
-            "couchapp.vendors.backends.git:GitVendor",
-            "couchapp.vendors.backends.hg:HgVendor",
-            "couchapp.vendors.backends.couchdb:CouchdbVendor"
-        ]
+        hooks = {}
+        
     )
     
     def __init__(self):
@@ -97,17 +94,6 @@ class Config(object):
     def __iter__(self):
         for k in list(self.conf.keys()):
             yield self[k]
-                
-    @property
-    def vendors(self):
-        """ load vendors modules from conf """
-        vendors_list = []
-        if not "vendors" in self.conf:
-            return vendors_list
-        for uri in self.conf.get('vendors'):
-            obj = util.load_py(uri, self)
-            vendors_list.append(obj)
-        return vendors_list
         
     @property
     def extensions(self):
