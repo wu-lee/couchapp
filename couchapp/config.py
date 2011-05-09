@@ -68,7 +68,14 @@ class Config(object):
         self.conf = self.global_conf.copy()
         self.local_conf.update(self.load_local(path))
         self.conf.update(self.local_conf)      
-    
+   
+    def get(self, key, default=None):
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            pass
+        return self.conf[key]
+
     def __getitem__(self, key):
         try:
             return getattr(self, key)
