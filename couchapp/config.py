@@ -141,7 +141,9 @@ class Config(object):
         if isinstance(dburls, basestring):
             dburls = [dburls]
 
-        return [Database(dburl) for dburl in dburls]
+        use_proxy = os.environ.get("http_proxy", "") != "" or os.environ.get("https_proxy", "") != ""
+
+        return [Database(dburl, use_proxy=use_proxy) for dburl in dburls]
         
     def get_app_name(self, dbstring=None, default=None):
         env = self.conf.get('env', {})
