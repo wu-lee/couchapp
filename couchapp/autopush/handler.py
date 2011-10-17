@@ -31,6 +31,8 @@ class CouchappEventHandler(FileSystemEventHandler):
         if os.path.exists(ignorefile):
             with open(ignorefile, 'r') as f:
                 self.ignores = json.loads(remove_comments(f.read()))
+        else:
+            self.ignores = []
 
     def check_ignore(self, item):
         for ign in self.ignores:
