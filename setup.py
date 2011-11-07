@@ -172,8 +172,8 @@ def main():
             classifiers = CLASSIFIERS,
             packages = find_packages(),
             data_files = DATA_FILES,
-            package_data = get_packages_data(),
-            cmdclass = {'install_data': install_package_data},
+            include_package_data=True,
+            zip_safe=False, 
             install_requires = INSTALL_REQUIRES,
             scripts=get_scripts(),
             options = dict(py2exe={
