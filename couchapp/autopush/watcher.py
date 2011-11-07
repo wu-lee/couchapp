@@ -8,10 +8,10 @@ import signal
 import time
 import traceback
 
-from . import DEFAULT_UPDATE_DELAY
-from .handler import CouchappEventHandler
-from .pathtools.path import absolute_path
-from .watchdog.observers import Observer
+from couchapp.autopush import DEFAULT_UPDATE_DELAY
+from couchapp.autopush.handler import CouchappEventHandler
+from pathtools.path import absolute_path
+from watchdog.observers import Observer
 
 
 log = logging.getLogger(__name__)

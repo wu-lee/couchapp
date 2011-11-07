@@ -7,14 +7,14 @@ import logging
 import os
 import sys
 
-from . import DEFAULT_UPDATE_DELAY
-from ..errors import AppError
-from ..localdoc import document
+from couchapp.autopush import DEFAULT_UPDATE_DELAY
+from couchapp.errors import AppError
+from couchapp.localdoc import document
 
 if sys.platform == "win32" or os.name == "nt":
-    from .winwatcher import WinCouchappWatcher as CouchappWatcher    
+    from couchapp.autopush.winwatcher import WinCouchappWatcher as CouchappWatcher    
 else:
-    from .watcher import CouchappWatcher
+    from couchapp.autopush.watcher import CouchappWatcher
 
 log = logging.getLogger(__name__)
 

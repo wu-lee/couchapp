@@ -15,7 +15,7 @@ import re
 import string
 import sys
 
-from .errors import ScriptError, AppError
+from couchapp.errors import ScriptError, AppError
 
 try:
     import json
@@ -23,7 +23,12 @@ except ImportError:
     try:
         import simplejson as json
     except ImportError:
-        from . import simplejson as json 
+        raise ImportError("""
+        simplejson isn't installed on your system. Install it by running
+        the command line:
+        
+        pip install simplejson 
+        """)
 
 logger = logging.getLogger(__name__)
 

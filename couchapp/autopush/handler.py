@@ -8,9 +8,10 @@ import os
 import re
 import time
 
-from . import DEFAULT_UPDATE_DELAY
-from .watchdog.events import FileSystemEventHandler
-from ..util import json, remove_comments
+from watchdog.events import FileSystemEventHandler
+
+from couchapp.autopush import DEFAULT_UPDATE_DELAY
+from couchapp.util import json, remove_comments
 
 
 log = logging.getLogger(__name__)

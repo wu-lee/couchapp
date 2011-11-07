@@ -5,9 +5,9 @@
 
 import logging
 
-from ...errors import VendorError
-from ...util import locate_program, popen3
-from .base import BackendVendor
+from couchapp.errors import VendorError
+from couchapp.util import locate_program, popen3
+from couchapp.vendors.backends.base import BackendVendor
 
 logger = logging.getLogger(__name__)
 

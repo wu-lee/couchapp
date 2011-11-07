@@ -4,7 +4,7 @@ import re
 import sys
 import struct
 
-from .scanner import make_scanner
+from couchapp.simplejson.scanner import make_scanner
 def _import_c_scanstring():
     try:
         from ._speedups import scanstring

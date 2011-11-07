@@ -8,11 +8,11 @@ import os
 import shutil
 import tempfile
 
-from .backends.couchdb import CouchdbVendor
-from .backends.git import GitVendor
-from .backends.hg import HgVendor
-from ..errors import VendorError
-from .. import util
+from couchapp.vendors.backends.couchdb import CouchdbVendor
+from couchapp.vendors.backends.git import GitVendor
+from couchapp.vendors.backends.hg import HgVendor
+from couchapp.errors import VendorError
+from couchapp import util
 
 logger = logging.getLogger(__name__)
 
