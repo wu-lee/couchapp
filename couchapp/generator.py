@@ -86,7 +86,7 @@ def generate_app(path, template=None, create=False):
         copy_helper(appdir, t)
         
     # add vendor
-    vendor_dir = os.path.join(appdir, 'vendor', 'couchapp')
+    vendor_dir = os.path.join(appdir, 'vendor')
     os.makedirs(vendor_dir)
     copy_helper(vendor_dir, '', tname="vendor")
     
