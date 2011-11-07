@@ -51,6 +51,8 @@ To install/upgrade development version::
 Note: some installations need to use *sudo* command beafore each command
 line.
 
+Note on debian system don't forget to install python-dev.
+
 To install on windows follow instructions `here
 <http://www.couchapp.org/page/windows-python-installers>`_.
 
