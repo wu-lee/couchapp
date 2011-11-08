@@ -180,6 +180,24 @@ def main():
                                 'dll_excludes': [
                                     "kernelbase.dll",
                                     "powrprof.dll" 
+                                ],
+                                'packages': [
+                                    "http_parser",
+                                    "restkit",
+                                    "restkit.manager",
+                                    "restkit.contrib",
+                                    "pathtools.path",
+                                    "brownie",
+                                    "brownie.datastructures",
+                                    "watchdog",
+                                    "watchdog.observers",
+                                    "watchdog.tricks",
+                                    "watchdog.utils",
+                                    "win32pdh",
+                                    "win32pdhutil",
+                                    "win32api",
+                                    "win32con",
+                                    "subprocess"
                                 ]
                            },
 
