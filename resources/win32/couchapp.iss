@@ -7,7 +7,7 @@
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{0CDA65F1-9FD8-42C5-8DD0-F65F7E8B7304}
 AppName=Couchapp
-AppVerName=Couchapp 0.8.1
+AppVerName=Couchapp 1.0.0
 AppPublisher=Benoit Chesneau
 AppPublisherURL=http://github.com/couchapp/couchapp
 AppSupportURL=http://github.com/couchapp/couchapp
@@ -16,7 +16,7 @@ DefaultDirName={pf}\Couchapp
 DefaultGroupName=Couchapp
 LicenseFile=LICENSE
 InfoAfterFile=resources\win32\postinstall.txt
-OutputBaseFilename=couchapp-0.8.1
+OutputBaseFilename=couchapp-1.0.0
 Compression=lzma
 SolidCompression=yes
 SourceDir=..\..
