@@ -411,9 +411,11 @@ class LocalDoc(object):
         if not os.path.isdir(vendordir):
             logger.debug("%s don't exist" % vendordir)
             return
-            
+           
+        
         for name in os.listdir(vendordir):
             current_path = os.path.join(vendordir, name)
+            print current_path
             if os.path.isdir(current_path):
                 attachdir = os.path.join(current_path, '_attachments')
                 if os.path.isdir(attachdir):
