@@ -100,7 +100,7 @@ class Vendor(object):
                 
         if not vendors:
             util.deltree(path)    
-            raise VendorError("Invalid vendor, medata not found.")
+            raise VendorError("Invalid vendor, metadata not found.")
             
         return vendors, path
         
