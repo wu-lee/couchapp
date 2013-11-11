@@ -1,33 +1,3 @@
-**DEPRECATED** - use http://github.com/benoitc/erica instead.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 CouchApp: Standalone CouchDB Application Development Made Simple
 ================================================================
 
