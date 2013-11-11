@@ -9,7 +9,7 @@ designed  to bring clarity and order to the freedom of
 `CouchDB <http://couchdb.apache.org>`_'s document-based approach.
 
 Also, be sure to checkout our Erlang-based sibling,
-[erica](https://github.com/benoitc/erica).
+`erica <https://github.com/benoitc/erica>`_.
 
 Write apps using just JavaScript and HTML
 -----------------------------------------
