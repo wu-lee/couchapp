@@ -1,0 +1,14 @@
+language: python
+python: 
+  - "2.7"
+branches:
+  only:
+    - master
+services:
+  - couchdb
+before_script:
+  - pip install coveralls
+script:
+  - nosetests tests
+after_success:
+  - coveralls

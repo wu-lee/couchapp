@@ -4,7 +4,6 @@
 # See the NOTICE for more information.
 
 from setuptools import setup, find_packages
-from distutils.command.install_data import install_data
 import glob
 from imp import load_source
 import os
@@ -137,12 +136,6 @@ if os.name == "nt" or sys.platform == "win32":
 
     DATA_FILES = get_py2exe_datafiles()
 
-class install_package_data(install_data):
-    def finalize_options(self):
-        self.set_undefined_options('install',
-                                   ('install_lib', 'install_dir'))
-        install_data.finalize_options(self)
-
 
 def main():
     # read long description
@@ -150,8 +143,8 @@ def main():
         long_description = f.read()
 
     INSTALL_REQUIRES=[
-            'restkit',
-            'watchdog']
+            'restkit==4.2.2',
+            'watchdog==0.6.0']
 
     try:
         import json
@@ -167,15 +160,16 @@ def main():
             author_email = 'benoitc@e-engura.org',
             description = 'Standalone CouchDB Application Development Made Simple.',
             long_description = long_description,
+            test_suite="tests",
             keywords = 'couchdb couchapp',
             platforms = ['any'],
             classifiers = CLASSIFIERS,
             packages = find_packages(),
             data_files = DATA_FILES,
             include_package_data=True,
-            zip_safe=False, 
+            zip_safe = False, 
             install_requires = INSTALL_REQUIRES,
-            scripts=get_scripts(),
+            scripts = get_scripts(),
             options = dict(py2exe={
                                 'dll_excludes': [
                                     "kernelbase.dll",
@@ -200,7 +194,6 @@ def main():
                                     "subprocess"
                                 ]
                            },
-
                            bdist_mpkg=dict(zipdist=True,
                                            license='LICENSE',
                                            readme='resources/macosx/Readme.html',
@@ -212,6 +205,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-

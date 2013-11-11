@@ -21,7 +21,7 @@ import os
 from shutil import rmtree
 
 from couchapp.localdoc import LocalDoc as doc
-import couchapp.simplejson as json
+import json
 
 class IgnoresTests(unittest.TestCase):
 
