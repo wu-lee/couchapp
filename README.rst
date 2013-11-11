@@ -8,6 +8,9 @@ CouchApp is a set of scripts and a `jQuery <http://jquery.com>`_ plugin
 designed  to bring clarity and order to the freedom of
 `CouchDB <http://couchdb.apache.org>`_'s document-based approach.
 
+Also, be sure to checkout our Erlang-based sibling,
+[erica](https://github.com/benoitc/erica).
+
 Write apps using just JavaScript and HTML
 -----------------------------------------
 
