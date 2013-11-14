@@ -1,5 +1,6 @@
 CouchApp: Standalone CouchDB Application Development Made Simple
 ================================================================
+.. image:: https://travis-ci.org/couchapp/couchapp.png?branch=master   :target: https://travis-ci.org/couchapp/couchapp
 
 CouchApp is designed to structure standalone CouchDB application
 development for maximum application portability.
