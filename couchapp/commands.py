@@ -138,7 +138,7 @@ def pushdocs(conf, source, dest, *args, **opts):
     docs = []
     for d in os.listdir(source):
         docdir = os.path.join(source, d)
-        if docdir.startswith('.'):
+        if d.startswith('.'):
             continue
         elif os.path.isfile(docdir):
             if d.endswith(".json"):
