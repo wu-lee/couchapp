@@ -144,8 +144,8 @@ class Vendor(object):
             meta = util.read_json(metaf)
             uri = meta.get("fetch_uri", "")
             if not uri:
-                raise VendorError("Can't update vendor `%s`: fetch_uri "
-                                  + "undefined." % name)
+                raise VendorError("Can't update vendor `%s`: fetch_uri undefined."
+                                  % name)
             new_vendors, temppath = self.fetch_vendor(uri, *args, **opts)
             for vname, vpath, vmeta in new_vendors:
                 if name != vname:
@@ -169,8 +169,8 @@ class Vendor(object):
                     meta = util.read_json(metaf)
                     uri = meta.get("fetch_uri", "")
                     if not uri:
-                        logger.warning("Can't update vendor `%s`: fetch_uri "
-                                       + "undefined." % vendor)
+                        logger.warning("Can't update vendor `%s`: fetch_uri undefined."
+                                       % vendor)
                         continue
                     else:
                         new_vendors, temppath = self.fetch_vendor(uri, *args,

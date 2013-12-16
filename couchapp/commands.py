@@ -404,51 +404,50 @@ pushopts = [
 
 table = {
     "init":
-    (init,
-     [],
-     "[COUCHAPPDIR]"),
+        (init,
+        [],
+        "[COUCHAPPDIR]"),
     "push":
-    (push,
-     pushopts + [('', 'docid', '', "set docid")],
-     "[OPTION]... [COUCHAPPDIR] DEST"),
+        (push,
+        pushopts + [('', 'docid', '', "set docid")],
+        "[OPTION]... [COUCHAPPDIR] DEST"),
     "clone":
-    (clone,
-     [('r', 'rev', '', "clone specific revision")],
-     "[OPTION]...[-r REV] SOURCE [COUCHAPPDIR]"),
+        (clone,
+        [('r', 'rev', '', "clone specific revision")],
+        "[OPTION]...[-r REV] SOURCE [COUCHAPPDIR]"),
     "pushapps":
-    (pushapps,
-     pushopts,
-     "[OPTION]... SOURCE DEST"),
+        (pushapps,
+        pushopts,
+        "[OPTION]... SOURCE DEST"),
     "pushdocs":
-    (pushdocs,
-     pushopts,
-     "[OPTION]... SOURCE DEST"),
+        (pushdocs,
+        pushopts,
+        "[OPTION]... SOURCE DEST"),
     "startapp":
-    (startapp,
-     [],
-     "[COUCHAPPDIR] NAME"),
+        (startapp,
+        [],
+        "[COUCHAPPDIR] NAME"),
     "generate":
-    (generate,
-     [('', 'template', '', "template name")],
-     "[OPTION]... [app|view,list,show,filter,function,vendor] [COUCHAPPDIR] "
-     + "NAME"),
+        (generate,
+        [('', 'template', '', "template name")],
+        "[OPTION]... [app|view,list,show,filter,function,vendor] [COUCHAPPDIR] NAME"),
     "vendor":
-    (vendor,
-     [("f", 'force', False, "force install or update")],
-     "[OPTION]...[-f] install|update [COUCHAPPDIR] SOURCE"),
+        (vendor,
+        [("f", 'force', False, "force install or update")],
+        "[OPTION]...[-f] install|update [COUCHAPPDIR] SOURCE"),
     "browse":
-    (browse,
-     [],
-     "[COUCHAPPDIR] DEST"),
+        (browse,
+        [],
+        "[COUCHAPPDIR] DEST"),
     "autopush":
-    (autopush,
-     [('', 'no-atomic', False, "send attachments one by one"),
-      ('', 'update-delay', DEFAULT_UPDATE_DELAY, "time between each update")],
-     "[OPTION]... [COUCHAPPDIR] DEST"),
+        (autopush,
+        [('', 'no-atomic', False, "send attachments one by one"),
+        ('', 'update-delay', DEFAULT_UPDATE_DELAY, "time between each update")],
+        "[OPTION]... [COUCHAPPDIR] DEST"),
     "help":
-    (usage, [], ""),
+        (usage, [], ""),
     "version":
-    (version, [], "")
+        (version, [], "")
 }
 
 withcmd = ['generate', 'vendor']
