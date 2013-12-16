@@ -5,7 +5,7 @@ python:
 services:
   - couchdb
 before_script:
-  - pip install coveralls
+  - pip install coveralls unittest2
 script:
   - python setup.py install
   - nosetests tests --with-coverage --cover-package=couchapp --cover-html
