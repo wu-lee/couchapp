@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of couchapp released under the Apache 2 license. 
+# This file is part of couchapp released under the Apache 2 license.
 # See the NOTICE for more information.
 
 import logging
@@ -16,10 +16,11 @@ from couchapp.util import json, remove_comments
 
 log = logging.getLogger(__name__)
 
+
 class CouchappEventHandler(FileSystemEventHandler):
 
-    def __init__(self, doc, dbs, update_delay=DEFAULT_UPDATE_DELAY, 
-            noatomic=False):
+    def __init__(self, doc, dbs, update_delay=DEFAULT_UPDATE_DELAY,
+                 noatomic=False):
         super(CouchappEventHandler, self).__init__()
 
         self.update_delay = update_delay
@@ -49,8 +50,7 @@ class CouchappEventHandler(FileSystemEventHandler):
         diff = time.time() - self.last_update
         if diff >= self.update_delay:
             log.info("synchronize changes")
-            self.doc.push(self.dbs, noatomic=self.noatomic, 
-                    noindex=True)
+            self.doc.push(self.dbs, noatomic=self.noatomic, noindex=True)
             self.last_update = None
 
     def dispatch(self, ev):

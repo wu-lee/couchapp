@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of couchapp released under the Apache 2 license. 
+# This file is part of couchapp released under the Apache 2 license.
 # See the NOTICE for more information.
 
 from __future__ import with_statement
@@ -26,21 +26,21 @@ except ImportError:
         raise ImportError("""
         simplejson isn't installed on your system. Install it by running
         the command line:
-        
-        pip install simplejson 
+
+        pip install simplejson
         """)
 
 logger = logging.getLogger(__name__)
 
-try:#python 2.6, use subprocess
+try:  # python 2.6, use subprocess
     import subprocess
     subprocess.Popen  # trigger ImportError early
     closefds = os.name == 'posix'
-    
+
     def popen3(cmd, mode='t', bufsize=0):
         p = subprocess.Popen(cmd, shell=True, bufsize=bufsize,
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, 
-            close_fds=closefds)
+                             stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE, close_fds=closefds)
         p.wait()
         return (p.stdin, p.stdout, p.stderr)
 except ImportError:
@@ -60,16 +60,15 @@ except ImportError:
                 dot = package.rindex('.', 0, dot)
             except ValueError:
                 raise ValueError("attempted relative import beyond top-level "
-                                  "package")
+                                 "package")
         return "%s.%s" % (package[:dot], name)
-
 
     def import_module(name, package=None):
         """Import a module.
 
-        The 'package' argument is required when performing a relative import. It
-        specifies the package to use as the anchor point from which to resolve the
-        relative import to an absolute import.
+        The 'package' argument is required when performing a relative import.
+        It specifies the package to use as the anchor point from which to
+        resolve the relative import to an absolute import.
 
         """
         if name.startswith('.'):
@@ -83,18 +82,20 @@ except ImportError:
             name = _resolve_name(name[level:], package, level)
         __import__(name)
         return sys.modules[name]
-    
+
 if os.name == 'nt':
     from win32com.shell import shell, shellcon
+
     def user_rcpath():
         path = []
         try:
             home = os.path.expanduser('~')
             if sys.getwindowsversion()[3] != 2 and home == '~':
-                 # We are on win < nt: fetch the APPDATA directory location and use
-                    # the parent directory as the user home dir.
+                 # We are on win < nt: fetch the APPDATA directory location and
+                    # use the parent directory as the user home dir.
                 appdir = shell.SHGetPathFromIDList(
-                    shell.SHGetSpecialFolderLocation(0, shellcon.CSIDL_APPDATA))
+                    shell.SHGetSpecialFolderLocation(0,
+                                                     shellcon.CSIDL_APPDATA))
                 home = os.path.dirname(appdir)
             path.append(os.path.join(home, '.couchapp.conf'))
         except:
@@ -103,16 +104,18 @@ if os.name == 'nt':
         userprofile = os.environ.get('USERPROFILE')
         if userprofile:
             path.append(os.path.join(userprofile, '.couchapp.conf'))
-        return path  
+        return path
+
     def user_path():
         path = []
         try:
             home = os.path.expanduser('~')
             if sys.getwindowsversion()[3] != 2 and home == '~':
-                 # We are on win < nt: fetch the APPDATA directory location and use
-                    # the parent directory as the user home dir.
+                 # We are on win < nt: fetch the APPDATA directory location and
+                    # use the parent directory as the user home dir.
                 appdir = shell.SHGetPathFromIDList(
-                    shell.SHGetSpecialFolderLocation(0, shellcon.CSIDL_APPDATA))
+                    shell.SHGetSpecialFolderLocation(0,
+                                                     shellcon.CSIDL_APPDATA))
                 home = os.path.dirname(appdir)
             path.append(os.path.join(home, '.couchapp'))
         except:
@@ -122,21 +125,21 @@ if os.name == 'nt':
         if userprofile:
             path.append(os.path.join(userprofile, '.couchapp'))
         return path
-    
+
 else:
     def user_rcpath():
         return [os.path.expanduser('~/.couchapp.conf')]
-        
+
     def user_path():
         return [os.path.expanduser('~/.couchapp')]
-        
-        
+
+
 # backport relpath from python2.6
 if not hasattr(os.path, 'relpath'):
     if os.name == "nt":
         def splitunc(p):
             if p[1:2] == ':':
-                return '', p # Drive letter present
+                return '', p  # Drive letter present
             firstTwo = p[0:2]
             if firstTwo == '//' or firstTwo == '\\\\':
                 # is a UNC path:
@@ -153,7 +156,7 @@ if not hasattr(os.path, 'relpath'):
                     index = len(p)
                 return p[:index], p[index:]
             return '', p
-            
+
         def relpath(path, start=os.path.curdir):
             """Return a relative version of a path"""
 
@@ -166,10 +169,10 @@ if not hasattr(os.path, 'relpath'):
                 unc_start, rest = splitunc(start)
                 if bool(unc_path) ^ bool(unc_start):
                     raise ValueError("Cannot mix UNC and non-UNC paths (%s and %s)"
-                                                                        % (path, start))
+                                     % (path, start))
                 else:
                     raise ValueError("path is on drive %s, start on drive %s"
-                                                        % (path_list[0], start_list[0]))
+                                     % (path_list[0], start_list[0]))
             # Work out how much of the filepath is shared by start and path.
             for i in range(min(len(start_list), len(path_list))):
                 if start_list[i].lower() != path_list[i].lower():
@@ -199,9 +202,11 @@ if not hasattr(os.path, 'relpath'):
                 return os.path.curdir
             return os.path.join(*rel_list)
 else:
-    relpath = os.path.relpath 
+    relpath = os.path.relpath
 #TODO: manage system configuration file
 _rcpath = None
+
+
 def rcpath():
     """ get global configuration """
     global _rcpath
@@ -209,7 +214,8 @@ def rcpath():
         if 'COUCHAPPCONF_PATH' in os.environ:
             _rcpath = []
             for p in os.environ['COUCHAPPCONF_PATH'].split(os.pathsep):
-                if not p: continue
+                if not p:
+                    continue
                 if os.path.isdir(p):
                     for f, kind in os.listdir(p):
                         if f == "couchapp.conf":
@@ -219,7 +225,7 @@ def rcpath():
         else:
             _rcpath = user_rcpath()
     return _rcpath
-    
+
 
 def findcouchapp(p):
     while not os.path.isfile(os.path.join(p, ".couchapprc")):
@@ -228,7 +234,7 @@ def findcouchapp(p):
             return None
     return p
 
-   
+
 def in_couchapp():
     """ return path of couchapp if we are somewhere in a couchapp. """
     current_path = os.getcwd()
@@ -244,6 +250,7 @@ def in_couchapp():
             return False
         current_path = parent
 
+
 def get_appname(docid):
     """ get applicaton name for design name"""
     return docid.split('_design/')[1]
@@ -257,8 +264,9 @@ def to_bytestring(s):
         return s.encode('utf-8')
     else:
         return s
-        
-# function borrowed to Fusil project(http://fusil.hachoir.org/) 
+
+
+# function borrowed to Fusil project(http://fusil.hachoir.org/)
 # which allowed us to use it under Apache 2 license.
 def locate_program(program, use_none=False, raise_error=False):
     if os.path.isabs(program):
@@ -285,7 +293,8 @@ def locate_program(program, use_none=False, raise_error=False):
     if raise_error:
         raise ValueError("Unable to locate program %r in PATH" % program)
     return default
-        
+
+
 def deltree(path):
     for root, dirs, files in os.walk(path, topdown=False):
         for name in files:
@@ -297,15 +306,18 @@ def deltree(path):
     except:
         pass
 
+
 def split_path(path):
     parts = []
     while True:
         head, tail = os.path.split(path)
         parts = [tail] + parts
         path = head
-        if not path: break
+        if not path:
+            break
     return parts
-    
+
+
 def sign(fpath):
     """ return md5 hash from file content
 
@@ -315,18 +327,20 @@ def sign(fpath):
     """
     if os.path.isfile(fpath):
         m = md5()
-        with  open(fpath, 'rb') as fp:
+        with open(fpath, 'rb') as fp:
             try:
                 while 1:
                     data = fp.read(8096)
-                    if not data: break
+                    if not data:
+                        break
                     m.update(data)
             except IOError, msg:
                 logger.error('%s: I/O error: %s\n' % (fpath, msg))
                 return 1
             return m.hexdigest()
     return ''
-    
+
+
 def read(fname, utf8=True, force_read=False):
     """ read file content"""
     if utf8:
@@ -340,7 +354,8 @@ def read(fname, utf8=True, force_read=False):
     else:
         with open(fname, 'rb') as f:
             return f.read()
-           
+
+
 def write(fname, content):
     """ write content in a file
 
@@ -350,6 +365,7 @@ def write(fname, content):
     with open(fname, 'wb') as f:
         f.write(to_bytestring(content))
 
+
 def write_json(fname, content):
     """ serialize content in json and save it
 
@@ -358,6 +374,7 @@ def write_json(fname, content):
 
     """
     write(fname, json.dumps(content).encode('utf-8'))
+
 
 def read_json(fname, use_environment=False, raise_on_error=False):
     """ read a json file and deserialize
@@ -386,9 +403,12 @@ def read_json(fname, use_environment=False, raise_on_error=False):
         if not raise_on_error:
             return {}
         raise
-    return data            
-    
+    return data
+
+
 _vendor_dir = None
+
+
 def vendor_dir():
     global _vendor_dir
     if _vendor_dir is None:
@@ -398,6 +418,7 @@ def vendor_dir():
 
 def expandpath(path):
     return os.path.expanduser(os.path.expandvars(path))
+
 
 def load_py(uri, cfg):
     if os.path.exists(uri):
@@ -414,21 +435,22 @@ def load_py(uri, cfg):
                 if inspect.getargspec(script_class.__init__) > 1:
                     script = script_class(cfg)
                 else:
-                    script=script_class()
+                    script = script_class()
             except TypeError:
-                script=script_class()
+                script = script_class()
         else:
             script = import_module(uri)
     script.__dict__['__couchapp_cfg__'] = cfg
     return script
 
+
 class ShellScript(object):
     """ simple object used to manage extensions or hooks from external
     scripts in any languages """
-     
+
     def __init__(self, cmd):
         self.cmd = cmd
-        
+
     def hook(self, *args, **options):
         cmd = self.cmd + " "
 
@@ -437,6 +459,7 @@ class ShellScript(object):
         if err:
             raise ScriptError(str(err))
         return (child_stdout.read())
+
 
 def hook_uri(uri, cfg):
     if isinstance(uri, list):
@@ -447,8 +470,9 @@ def hook_uri(uri, cfg):
         script_uri = uri
     return ShellScript(script_uri)
 
-re_comment = re.compile(r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"', 
-        re.DOTALL | re.MULTILINE)
+re_comment = re.compile(r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
+                        re.DOTALL | re.MULTILINE)
+
 
 def remove_comments(t):
     def replace(m):

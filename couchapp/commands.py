@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of couchapp released under the Apache 2 license. 
+# This file is part of couchapp released under the Apache 2 license.
 # See the NOTICE for more information.
 
 import logging
@@ -29,16 +29,18 @@ def hook(conf, path, hook_type, *args, **kwargs):
             if hasattr(h, 'hook'):
                 h.hook(path, hook_type, *args, **kwargs)
 
+
 def init(conf, path, *args, **opts):
     if not args:
         dest = os.getcwd()
     else:
         dest = os.path.normpath(os.path.join(os.getcwd(), args[0]))
-        
+
     if dest is None:
         raise AppError("Unknown dest")
-        
+
     document(dest, True)
+
 
 def push(conf, path, *args, **opts):
     export = opts.get('export', False)
@@ -62,11 +64,10 @@ def push(conf, path, *args, **opts):
         dest = args[1]
     if doc_path is None:
         raise AppError("You aren't in a couchapp.")
-    
+
     conf.update(doc_path)
 
-    doc = document(doc_path, create=False, 
-                        docid=opts.get('docid'))
+    doc = document(doc_path, create=False, docid=opts.get('docid'))
     if export:
         if opts.get('output'):
             util.write_json(opts.get('output'), str(doc))
@@ -74,15 +75,16 @@ def push(conf, path, *args, **opts):
             print str(doc)
         return 0
     dbs = conf.get_dbs(dest)
-    
-    hook(conf, doc_path, "pre-push", dbs=dbs)    
+
+    hook(conf, doc_path, "pre-push", dbs=dbs)
     doc.push(dbs, noatomic, browse, force)
     hook(conf, doc_path, "post-push", dbs=dbs)
-    
+
     docspath = os.path.join(doc_path, '_docs')
     if os.path.exists(docspath):
         pushdocs(conf, docspath, dest, *args, **opts)
     return 0
+
 
 def pushapps(conf, source, dest, *args, **opts):
     export = opts.get('export', False)
@@ -93,8 +95,8 @@ def pushapps(conf, source, dest, *args, **opts):
     source = os.path.normpath(os.path.join(os.getcwd(), source))
     for d in os.listdir(source):
         appdir = os.path.join(source, d)
-        if os.path.isdir(appdir) and os.path.isfile(os.path.join(appdir, 
-                                        '.couchapprc')):
+        if os.path.isdir(appdir) and \
+                os.path.isfile(os.path.join(appdir, '.couchapprc')):
             doc = document(appdir)
             hook(conf, appdir, "pre-push", dbs=dbs, pushapps=True)
             if export or not noatomic:
@@ -125,11 +127,12 @@ def pushapps(conf, source, dest, *args, **opts):
                             doc['_rev'] = db.last_rev(doc['_id'])
                             docs1.append(doc)
                         except ResourceNotFound:
-                            pass 
+                            pass
                     if docs1:
                         db.save_docs(docs1)
     return 0
-  
+
+
 def pushdocs(conf, source, dest, *args, **opts):
     export = opts.get('export', False)
     noatomic = opts.get('no_atomic', False)
@@ -194,20 +197,22 @@ def pushdocs(conf, source, dest, *args, **opts):
                             doc['_rev'] = db.last_rev(doc['_id'])
                             docs1.append(doc)
                         except ResourceNotFound:
-                            pass 
+                            pass
                 if docs1:
                     db.save_docs(docs1)
     return 0
-    
+
+
 def clone(conf, source, *args, **opts):
     if len(args) > 0:
         dest = args[0]
     else:
-        dest = None 
+        dest = None
     hook(conf, dest, "pre-clone", source=source)
     clone_app.clone(source, dest, rev=opts.get('rev'))
     hook(conf, dest, "post-clone", source=source)
     return 0
+
 
 def startapp(conf, *args, **opts):
     if len(args) < 1:
@@ -217,24 +222,25 @@ def startapp(conf, *args, **opts):
         name = args[0]
         dest = os.path.normpath(os.path.join(os.getcwd(), ".", name))
     elif len(args) == 2:
-        
+
         name = args[1]
         dest = os.path.normpath(os.path.join(args[0], args[1]))
 
     if os.path.isfile(os.path.join(dest, ".couchapprc")):
-        raise AppError("can't create an app at '%s'. One already exists"
-                "here" % dest)
+        raise AppError("can't create an app at '%s'. One already exists here" %
+                       dest)
 
     generator.generate(dest, "startapp", name, **opts)
     return 0
+
 
 def generate(conf, path, *args, **opts):
     dest = path
     if len(args) < 1:
         raise AppError("Can't generate function, name or path is missing")
-        
+
     if len(args) == 1:
-        kind="app"
+        kind = "app"
         name = args[0]
     elif len(args) == 2:
         kind = args[0]
@@ -243,19 +249,20 @@ def generate(conf, path, *args, **opts):
         kind = args[0]
         dest = args[1]
         name = args[2]
-        
+
     if dest is None:
         if kind == "app":
             dest = os.path.normpath(os.path.join(os.getcwd(), ".", name))
             opts['create'] = True
         else:
             raise AppError("You aren't in a couchapp.")
-    
-    hook(conf, dest, "pre-generate")    
+
+    hook(conf, dest, "pre-generate")
     generator.generate(dest, kind, name, **opts)
     hook(conf, dest, "post-generate")
     return 0
-    
+
+
 def vendor(conf, path, *args, **opts):
     if len(args) < 1:
         raise AppError("missing command")
@@ -267,14 +274,14 @@ def vendor(conf, path, *args, **opts):
             raise AppError("missing source")
         if len(args) == 1:
             source = args.pop(0)
-            
+
         elif len(args) > 1:
             dest = args.pop(0)
             source = args.pop(0)
-        
+
         if dest is None:
             raise AppError("You aren't in a couchapp.")
-            
+
         dest = os.path.normpath(os.path.join(os.getcwd(), dest))
         hook(conf, dest, "pre-vendor", source=source, action="install")
         vendor_install(conf, dest, source, *args, **opts)
@@ -282,13 +289,13 @@ def vendor(conf, path, *args, **opts):
     else:
         vendorname = None
         if len(args) == 1:
-            vendorname=args.pop(0)
+            vendorname = args.pop(0)
         elif len(args) >= 2:
             dest = args.pop(0)
-            vendorname=args.pop(0)
+            vendorname = args.pop(0)
         if dest is None:
             raise AppError("You aren't in a couchapp.")
-            
+
         dest = os.path.normpath(os.path.join(os.getcwd(), dest))
         hook(conf, dest, "pre-vendor", name=vendorname, action="update")
         vendor_update(conf, dest, vendorname, *args, **opts)
@@ -308,27 +315,28 @@ def browse(conf, path, *args, **opts):
         dest = args[1]
     if doc_path is None:
         raise AppError("You aren't in a couchapp.")
-    
+
     conf.update(doc_path)
 
-    doc = document(doc_path, create=False, 
-                        docid=opts.get('docid'))
+    doc = document(doc_path, create=False, docid=opts.get('docid'))
 
     dbs = conf.get_dbs(dest)
     doc.browse(dbs)
 
+
 def version(conf, *args, **opts):
     from couchapp import __version__
-    
+
     print "Couchapp (version %s)" % __version__
     print "Copyright 2008-2010 Benoît Chesneau <benoitc@e-engura.org>"
-    print "Licensed under the Apache License, Version 2.0." 
+    print "Licensed under the Apache License, Version 2.0."
     print ""
     if opts.get('help', False):
         usage(conf, *args, **opts)
-    
+
     return 0
-    
+
+
 def usage(conf, *args, **opts):
     if opts.get('version', False):
         version(conf, *args, **opts)
@@ -356,10 +364,12 @@ def usage(conf, *args, **opts):
             max_opt = max(cmd_options, key=lambda o: len(get_switch_str(o)))
             max_opt_len = len(get_switch_str(max_opt))
             for opt in cmd_options:
-                print "\t\t%-*s %s" % (max_opt_len, get_switch_str(opt), opt[3])
+                print "\t\t%-*s %s" % (max_opt_len, get_switch_str(opt),
+                                       opt[3])
             print ""
         print ""
     return 0
+
 
 def get_switch_str(opt):
     """
@@ -391,11 +401,11 @@ pushopts = [
     ('b', 'browse', False, "open the couchapp in the browser"),
     ('', 'force', False, "force attachments sending")
 ]
-    
+
 table = {
-    "init": 
-        (init, 
-        [], 
+    "init":
+        (init,
+        [],
         "[COUCHAPPDIR]"),
     "push":
         (push,

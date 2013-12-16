@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of couchapp released under the Apache 2 license. 
+# This file is part of couchapp released under the Apache 2 license.
 # See the NOTICE for more information.
 
 from __future__ import with_statement
@@ -26,10 +26,11 @@ else:
     def _replace_slash(name):
         return name
 
+
 def clone(source, dest=None, rev=None):
     """
     Clone an application from a design_doc given.
-    
+
     :attr design_doc: dict, the design doc retrieved from couchdb
     if something was wrong.
     """
@@ -39,24 +40,22 @@ def clone(source, dest=None, rev=None):
     except ValueError:
         raise AppError("%s isn't a valid source" % source)
 
-
     if not dest:
         dest = docid
-   
+
     path = os.path.normpath(os.path.join(os.getcwd(), dest))
     if not os.path.exists(path):
         os.makedirs(path)
 
-    db = client.Database(dburl[:-1], create=False)    
+    db = client.Database(dburl[:-1], create=False)
     if not rev:
         doc = db.open_doc("_design/%s" % docid)
     else:
         doc = db.open_doc("_design/%s" % docid, rev=rev)
     docid = doc['_id']
-        
-    
+
     metadata = doc.get('couchapp', {})
-    
+
     # get manifest
     manifest = metadata.get('manifest', {})
 
@@ -71,7 +70,7 @@ def clone(source, dest=None, rev=None):
         for filename in manifest:
             logger.debug("clone property: %s" % filename)
             filepath = os.path.join(path, filename)
-            if filename.endswith('/'): 
+            if filename.endswith('/'):
                 if not os.path.isdir(filepath):
                     os.makedirs(filepath)
             elif filename == "couchapp.json":
@@ -95,12 +94,11 @@ def clone(source, dest=None, rev=None):
                     except KeyError:
                         break
 
-
                     if isinstance(content, basestring):
                         _ref = md5(util.to_bytestring(content)).hexdigest()
                         if objects and _ref in objects:
                             content = objects[_ref]
-                            
+
                         if content.startswith('base64-encoded;'):
                             content = base64.b64decode(content[15:])
 
@@ -113,7 +111,7 @@ def clone(source, dest=None, rev=None):
                     filedir = os.path.dirname(filepath)
                     if not os.path.isdir(filedir):
                         os.makedirs(filedir)
-                    
+
                     util.write(filepath, content)
 
                     # remove the key from design doc
@@ -124,12 +122,11 @@ def clone(source, dest=None, rev=None):
                                 del temp[key2]
                             break
                         temp = temp[key2]
-                        
-    
+
     # second pass for missing key or in case
     # manifest isn't in app
     for key in doc.iterkeys():
-        if key.startswith('_'): 
+        if key.startswith('_'):
             continue
         elif key in ('couchapp'):
             app_meta = copy.deepcopy(doc['couchapp'])
@@ -153,8 +150,7 @@ def clone(source, dest=None, rev=None):
                 if not os.path.isdir(vs_item_dir):
                     os.makedirs(vs_item_dir)
                 for func_name, func in vs_item.iteritems():
-                    filename = os.path.join(vs_item_dir, '%s.js' % 
-                            func_name)
+                    filename = os.path.join(vs_item_dir, '%s.js' % func_name)
                     util.write(filename, func)
                     logger.warning("clone view not in manifest: %s" % filename)
         elif key in ('shows', 'lists', 'filter', 'update'):
@@ -162,8 +158,7 @@ def clone(source, dest=None, rev=None):
             if not os.path.isdir(showpath):
                 os.makedirs(showpath)
             for func_name, func in doc[key].iteritems():
-                filename = os.path.join(showpath, '%s.js' % 
-                        func_name)
+                filename = os.path.join(showpath, '%s.js' % func_name)
                 util.write(filename, func)
                 logger.warning(
                     "clone show or list not in manifest: %s" % filename)
@@ -185,7 +180,7 @@ def clone(source, dest=None, rev=None):
                                 value = base64.b64decode(content[15:])
                             util.write(fieldpath, value)
                         else:
-                            util.write_json(fieldpath + '.json', value)        
+                            util.write_json(fieldpath + '.json', value)
                 else:
                     value = doc[key]
                     if not isinstance(value, basestring):
@@ -195,19 +190,20 @@ def clone(source, dest=None, rev=None):
     # save id
     idfile = os.path.join(path, '_id')
     util.write(idfile, doc['_id'])
-  
+
     util.write_json(os.path.join(path, '.couchapprc'), {})
 
     if '_attachments' in doc:  # process attachments
         attachdir = os.path.join(path, '_attachments')
         if not os.path.isdir(attachdir):
             os.makedirs(attachdir)
-            
+
         for filename in doc['_attachments'].iterkeys():
             if filename.startswith('vendor'):
                 attach_parts = util.split_path(filename)
                 vendor_attachdir = os.path.join(path, attach_parts.pop(0),
-                        attach_parts.pop(0), '_attachments')
+                                                attach_parts.pop(0),
+                                                '_attachments')
                 filepath = os.path.join(vendor_attachdir, *attach_parts)
             else:
                 filepath = os.path.join(attachdir, filename)
@@ -215,12 +211,12 @@ def clone(source, dest=None, rev=None):
             currentdir = os.path.dirname(filepath)
             if not os.path.isdir(currentdir):
                 os.makedirs(currentdir)
-    
+
             if signatures.get(filename) != util.sign(filepath):
                 resp = db.fetch_attachment(docid, filename)
                 with open(filepath, 'wb') as f:
                     for chunk in resp.body_stream():
                         f.write(chunk)
                 logger.debug("clone attachment: %s" % filename)
-                
+
     logger.info("%s cloned in %s" % (source, dest))

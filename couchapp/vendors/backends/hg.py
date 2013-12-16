@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# This file is part of couchapp released under the Apache 2 license. 
+# This file is part of couchapp released under the Apache 2 license.
 # See the NOTICE for more information.
 
 import logging
@@ -11,16 +11,17 @@ from couchapp.vendors.backends.base import BackendVendor
 
 logger = logging.getLogger(__name__)
 
+
 class HgVendor(BackendVendor):
-    url="http://github.com/couchapp/couchapp"
-    author="Benoit Chesneau"
-    author_email="benoitc@e-engura.org"
+    url = "http://github.com/couchapp/couchapp"
+    author = "Benoit Chesneau"
+    author_email = "benoitc@e-engura.org"
     description = "HG vendor handler"
     long_description = """couchapp vendor install|update from mercurial::
-    
+
     hg://somerepo (repo available via http, use http+ssh:// for ssh repos)
     """
-    
+
     scheme = ['hg', 'hg+ssh']
 
     def fetch(self, url, path, *args, **opts):
@@ -33,7 +34,7 @@ class HgVendor(BackendVendor):
             cmd = locate_program("hg", raise_error=True)
         except ValueError, e:
             raise VendorError(e)
-        
+
         cmd += " clone %s %s" % (url, path)
 
        # exec cmd
@@ -41,6 +42,5 @@ class HgVendor(BackendVendor):
         err = child_stderr.read()
         if err:
             raise VendorError(str(err))
-            
-        logger.debug(child_stdout.read())
 
+        logger.debug(child_stdout.read())
