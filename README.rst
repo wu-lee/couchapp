@@ -53,7 +53,7 @@ On OSX 10.6/10.7 you may need to set ARCH_FLAGS::
     $ env ARCHFLAGS="-arch i386 -arch x86_64" pip install couchapp
 
 To install/upgrade development version::
-   
+
     $ pip install git+http://github.com/couchapp/couchapp.git#egg=Couchapp
 
 Note: some installations need to use *sudo* command beafore each command
@@ -71,6 +71,26 @@ Getting started
 ---------------
 
 Read the `tutorial <http://www.couchapp.org/page/getting-started>`_.
+
+Testing
+-------
+
+We use `nose <http://nose.readthedocs.org/>`_. and
+`nose-testconfig <https://pypi.python.org/pypi/nose-testconfig>`_. for setting
+up and running tests.
+
+In the ``tests`` directory, copy ``config.sample.ini`` to ``config.ini``, tweak
+the settings, and then run the tests from the main ``couchapp`` directory (as
+the paths below are relative to that):
+
+    $ nosetests --tc-file=tests/config.ini
+
+If you're wanting to generate code coverage reports (because you've got big
+plans to make our tests better!), you can do so with this command instead:
+
+    $ nosetests --with-coverage --cover-package=couchapp --cover-html --tc-file=tests/config.ini
+
+Thanks for testing ``couchapp``!
 
 Other resources
 ---------------

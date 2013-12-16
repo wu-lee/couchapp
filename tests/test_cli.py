@@ -11,6 +11,7 @@ import tempfile
 import shutil
 import sys
 import unittest2 as unittest
+from testconfig import config
 
 from couchapp.errors import ResourceNotFound
 from couchapp.client import Database
@@ -18,6 +19,10 @@ from couchapp.util import popen3, deltree
 
 couchapp_dir = os.path.join(os.path.dirname(__file__), '../')
 couchapp_cli = os.path.join(os.path.dirname(__file__), '../bin/couchapp')
+try:
+    url = config['host']['url']
+except KeyError:
+    url = 'http://127.0.0.1:5984/'
 
 
 def _tempdir():
@@ -29,8 +34,7 @@ def _tempdir():
 class CliTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.db = Database('http://127.0.0.1:5984/couchapp-test',
-                           create=True)
+        self.db = Database(url + 'couchapp-test', create=True)
 
         self.tempdir = _tempdir()
         os.makedirs(self.tempdir)
@@ -163,7 +167,7 @@ class CliTestCase(unittest.TestCase):
         (child_stdin, child_stdout, child_stderr) = \
             popen3("%s clone %s %s"
                    % (self.cmd,
-                      "http://127.0.0.1:5984/couchapp-test/_design/my-app",
+                      url + "couchapp-test/_design/my-app",
                       app_dir))
 
         # should create .couchapprc
@@ -188,7 +192,7 @@ class CliTestCase(unittest.TestCase):
         (child_stdin, child_stdout, child_stderr) = \
             popen3("%s clone %s %s"
                    % (self.cmd,
-                      "http://127.0.0.1:5984/couchapp-test/_design/my-app",
+                      url + "couchapp-test/_design/my-app",
                       app_dir))
         self.assertTrue(os.path.isfile(os.path.join(app_dir, 'test.txt')))
 
@@ -202,7 +206,7 @@ class CliTestCase(unittest.TestCase):
         (child_stdin, child_stdout, child_stderr) = \
             popen3("%s clone %s %s"
                    % (self.cmd,
-                      "http://127.0.0.1:5984/couchapp-test/_design/my-app",
+                      url + "couchapp-test/_design/my-app",
                       app_dir))
         self.assertTrue(os.path.isfile(os.path.join(app_dir,
                                                     'views/example/map.js')))
@@ -214,7 +218,7 @@ class CliTestCase(unittest.TestCase):
         (child_stdin, child_stdout, child_stderr) = \
             popen3("%s clone %s %s"
                    % (self.cmd,
-                      "http://127.0.0.1:5984/couchapp-test/_design/my-app",
+                      url + "couchapp-test/_design/my-app",
                       app_dir))
         self.assertTrue(os.path.isfile(os.path.join(app_dir,
                                                     'views/example/map.js')))
@@ -238,8 +242,8 @@ class CliTestCase(unittest.TestCase):
             popen3("%s generate docs/app2" % self.cmd)
 
         (child_stdin, child_stdout, child_stderr) = \
-            popen3("%s pushapps docs/ http://127.0.0.1:5984/couchapp-test"
-                   % self.cmd)
+            popen3("%s pushapps docs/ %scouchapp-test"
+                   % (self.cmd, url))
 
         alldocs = self.db.all_docs()['rows']
         self.assertEqual(len(alldocs), 2)
@@ -257,8 +261,8 @@ class CliTestCase(unittest.TestCase):
             popen3("%s generate docs/app2" % self.cmd)
 
         (child_stdin, child_stdout, child_stderr) = \
-            popen3("%s pushdocs docs/ http://127.0.0.1:5984/couchapp-test"
-                   % self.cmd)
+            popen3("%s pushdocs docs/ %scouchapp-test"
+                   % (self.cmd, url))
 
         alldocs = self.db.all_docs()['rows']
 
