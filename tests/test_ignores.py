@@ -23,14 +23,15 @@ from shutil import rmtree
 from couchapp.localdoc import LocalDoc as doc
 import json
 
+
 class IgnoresTests(unittest.TestCase):
 
     def setUp(self):
         # Create a temp dir for the tests to run in
         self.tmp_dir = tempfile.mkdtemp()
         # Define some test data
-        self.testdata = {'CVS': True, "dontignorethisCVS": False, 
-                        "ignore_me": True, "but_don't_ignore_me": False}
+        self.testdata = {'CVS': True, "dontignorethisCVS": False,
+                         "ignore_me": True, "but_don't_ignore_me": False}
         # Create the ignores file
         self.ignores = ["^CVS", "ignore_me"]
         f = open(os.path.join(self.tmp_dir, '.couchappignore'), 'w')
@@ -40,33 +41,34 @@ class IgnoresTests(unittest.TestCase):
         # Make a UI and a doc instance for the tests
         self.doc = doc(self.tmp_dir)
 
-        # I could write these files to the temp area, but that seems unnecessary
-        # since the unit test doesn't interact with the file system other than 
-        # to make the .couchappignore file.
+        # I could write these files to the temp area, but that seems
+        # unnecessary since the unit test doesn't interact with the file
+        # system other than to make the .couchappignore file.
         #for i in self.testdata.keys():
         #   open(os.path.join(self.tmp_dir, i), 'w').close()
-        
+
     def tearDown(self):
         # Clear up temp dir and the files it contains
         rmtree(self.tmp_dir)
-    
+
     def testLoadIgnores(self):
         """
-        If the code works the doc should have a data member containing a list of 
-        the regexps to ignore, and this list should be the same as the list stored
-        in self.ignores and used in setUp to create the .couchappignore file.
+        If the code works the doc should have a data member containing a list
+        of the regexps to ignore, and this list should be the same as the list
+        stored in self.ignores and used in setUp to create the .couchappignore
+        file.
         """
         assert self.doc.ignores == self.ignores
-    
+
     def testIgnore(self):
         """
-        Run through the test data and check that the doc would treat it appropriately
-        were it a file/directory the doc was uploading.
-        
+        Run through the test data and check that the doc would treat it
+        appropriately were it a file/directory the doc was uploading.
+
         Really this test checks the re module...
         """
         for i in self.testdata.keys():
             assert self.doc.check_ignore(i) == self.testdata[i]
-        
+
 if __name__ == '__main__':
     unittest.main()
