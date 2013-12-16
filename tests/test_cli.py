@@ -47,6 +47,16 @@ class CliTestCase(unittest.TestCase):
         testapp_path = os.path.join(os.path.dirname(__file__), 'testapp')
         shutil.copytree(testapp_path, self.app_dir)
 
+    def _retrieve_ddoc(self):
+        # any design doc created ?
+        design_doc = None
+        try:
+            design_doc = self.db.open_doc('_design/my-app')
+        except ResourceNotFound:
+            pass
+        self.assertIsNotNone(design_doc)
+        return design_doc
+
     def testGenerate(self):
         os.chdir(self.tempdir)
         (child_stdin, child_stdout, child_stderr) = popen3("%s generate my-app"
@@ -71,13 +81,7 @@ class CliTestCase(unittest.TestCase):
         (child_stdin, child_stdout, child_stderr) = \
             popen3("%s push -v my-app couchapp-test" % self.cmd)
 
-        # any design doc created ?
-        design_doc = None
-        try:
-            design_doc = self.db.open_doc('_design/my-app')
-        except ResourceNotFound:
-            pass
-        self.assertIsNotNone(design_doc)
+        design_doc = self._retrieve_ddoc()
 
         # should create view
         self.assertIn('function', design_doc['views']['example']['map'])
@@ -114,13 +118,7 @@ class CliTestCase(unittest.TestCase):
         (child_stdin, child_stdout, child_stderr) = \
             popen3("%s push --no-atomic my-app couchapp-test" % self.cmd)
 
-        # any design doc created ?
-        design_doc = None
-        try:
-            design_doc = self.db.open_doc('_design/my-app')
-        except ResourceNotFound:
-            pass
-        self.assertIsNotNone(design_doc)
+        design_doc = self._retrieve_ddoc()
 
         # there are 3 revisions (1 doc creation + 2 attachments)
         self.assertTrue(design_doc['_rev'].startswith('3-'))
@@ -158,13 +156,7 @@ class CliTestCase(unittest.TestCase):
         (child_stdin, child_stdout, child_stderr) = \
             popen3("%s push -v my-app couchapp-test" % self.cmd)
 
-        # any design doc created ?
-        design_doc = None
-        try:
-            design_doc = self.db.open_doc('_design/my-app')
-        except ResourceNotFound:
-            pass
-        self.assertIsNotNone(design_doc)
+        design_doc = self._retrieve_ddoc()
 
         app_dir = os.path.join(self.tempdir, "couchapp-test")
 
