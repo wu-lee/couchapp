@@ -158,7 +158,13 @@ class CliTestCase(unittest.TestCase):
         (child_stdin, child_stdout, child_stderr) = \
             popen3("%s push -v my-app couchapp-test" % self.cmd)
 
-        design_doc = self.db.open_doc('_design/my-app')
+        # any design doc created ?
+        design_doc = None
+        try:
+            design_doc = self.db.open_doc('_design/my-app')
+        except ResourceNotFound:
+            pass
+        self.assertIsNotNone(design_doc)
 
         app_dir = os.path.join(self.tempdir, "couchapp-test")
 
