@@ -83,7 +83,7 @@ class CliTestCase(unittest.TestCase):
     def testPush(self):
         self._make_testapp()
         (child_stdin, child_stdout, child_stderr) = \
-            popen3("%s push -v my-app couchapp-test" % self.cmd)
+            popen3("%s push -v my-app %scouchapp-test" % (self.cmd, url))
 
         design_doc = self._retrieve_ddoc()
 
@@ -120,7 +120,8 @@ class CliTestCase(unittest.TestCase):
     def testPushNoAtomic(self):
         self._make_testapp()
         (child_stdin, child_stdout, child_stderr) = \
-            popen3("%s push --no-atomic my-app couchapp-test" % self.cmd)
+            popen3("%s push --no-atomic my-app %scouchapp-test" % (self.cmd,
+                                                                   url))
 
         design_doc = self._retrieve_ddoc()
 
@@ -158,7 +159,7 @@ class CliTestCase(unittest.TestCase):
     def testClone(self):
         self._make_testapp()
         (child_stdin, child_stdout, child_stderr) = \
-            popen3("%s push -v my-app couchapp-test" % self.cmd)
+            popen3("%s push -v my-app %scouchapp-test" % (self.cmd, url))
 
         design_doc = self._retrieve_ddoc()
 
