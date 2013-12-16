@@ -274,9 +274,6 @@ class CliTestCase(unittest.TestCase):
 
         self.assertEqual('_design/app1', alldocs[0]['id'])
 
-    def _make_testapp(self):
-        testapp_path = os.path.join(os.path.dirname(__file__), 'testapp')
-        shutil.copytree(testapp_path, self.app_dir)
 
 if __name__ == '__main__':
     unittest.main()
