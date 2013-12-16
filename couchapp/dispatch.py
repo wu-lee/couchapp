@@ -162,14 +162,13 @@ def parseopts(args, options, state):
     opts, args = getopt.getopt(args, shortlist, namelist)
     for opt, val in opts:
         name = argmap[opt]
-        t = type(defmap[name])
-        if t is type(1):
+        if isinstance(defmap[name], int):
             state[name] = int(val)
-        elif t is type(''):
+        elif isinstance(defmap[name], basestring):
             state[name] = val
-        elif t is type([]):
+        elif isinstance(defmap[name], list):
             state[name].append(val)
-        elif t is type(None) or t is type(False):
+        elif defmap[name] is None or isinstance(defmap[name], bool):
             state[name] = True
 
     return args

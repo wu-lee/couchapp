@@ -152,8 +152,9 @@ class LocalDoc(object):
             ctx = local_files.DEFAULT_CONTEXT
             bookmark_file = os.path.join(ctx.db_dir, "couchdb.html")
             try:
-                username, password = re.findall("<!-- !!([^!]+)!!([^!]+)!! -->",
-                                                open(bookmark_file).read())[-1]
+                username, password = \
+                    re.findall("<!-- !!([^!]+)!!([^!]+)!! -->",
+                               open(bookmark_file).read())[-1]
             except ValueError:
                 raise IOError("Bookmark file is corrupt." +
                               "Username/password are missing.")
@@ -168,8 +169,8 @@ class LocalDoc(object):
         with open(filepath, "rb") as f:
             re_sp = re.compile('\s')
             att = {"data": re_sp.sub('', base64.b64encode(f.read())),
-                   "content_type": ';'.join(filter(None,
-                                                   mimetypes.guess_type(name)))}
+                   "content_type":
+                   ';'.join(filter(None, mimetypes.guess_type(name)))}
 
         return att
 
@@ -246,8 +247,8 @@ class LocalDoc(object):
                                   objects)
 
             if 'validate_doc_update' in self._doc:
-                tmp_dict = dict(validate_doc_update=self._doc[
-                                                    "validate_doc_update"])
+                tmp_dict = {'validate_doc_update':
+                            self._doc["validate_doc_update"]}
                 package_shows(self._doc, tmp_dict, self.docdir, objects)
                 self._doc.update(tmp_dict)
 
@@ -351,18 +352,18 @@ class LocalDoc(object):
                 else:
                     try:
                         content = util.read(current_path).strip()
-                    except UnicodeDecodeError, e:
+                    except UnicodeDecodeError:
                         logger.warning("%s isn't encoded in utf8" %
                                        current_path)
                         content = util.read(current_path, utf8=False)
                         try:
                             content.encode('utf-8')
-                        except UnicodeError, e:
+                        except UnicodeError:
                             logger.warning("plan B didn't work, %s is a binary"
                                            % current_path)
                             logger.warning("use plan C: encode to base64")
-                            content = "base64-encoded;%s" % base64.b64encode(
-                                                                        content)
+                            content = "base64-encoded;%s" % \
+                                base64.b64encode(content)
 
                 # remove extension
                 name, ext = os.path.splitext(name)

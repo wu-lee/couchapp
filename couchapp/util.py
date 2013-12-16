@@ -15,7 +15,7 @@ import re
 import string
 import sys
 
-from couchapp.errors import ScriptError, AppError
+from couchapp.errors import ScriptError
 
 try:
     import json
@@ -73,7 +73,8 @@ except ImportError:
         """
         if name.startswith('.'):
             if not package:
-                raise TypeError("relative imports require the 'package' argument")
+                raise TypeError("relative imports require the 'package' "
+                                + "argument")
             level = 0
             for character in name:
                 if character != '.':
@@ -168,8 +169,8 @@ if not hasattr(os.path, 'relpath'):
                 unc_path, rest = splitunc(path)
                 unc_start, rest = splitunc(start)
                 if bool(unc_path) ^ bool(unc_start):
-                    raise ValueError("Cannot mix UNC and non-UNC paths (%s and %s)"
-                                     % (path, start))
+                    raise ValueError("Cannot mix UNC and non-UNC paths (%s "
+                                     + "and %s)" % (path, start))
                 else:
                     raise ValueError("path is on drive %s, start on drive %s"
                                      % (path_list[0], start_list[0]))
@@ -347,7 +348,7 @@ def read(fname, utf8=True, force_read=False):
         try:
             with codecs.open(fname, 'rb', "utf-8") as f:
                 return f.read()
-        except UnicodeError, e:
+        except UnicodeError:
             if force_read:
                 return read(fname, utf8=False)
             raise
@@ -470,8 +471,8 @@ def hook_uri(uri, cfg):
         script_uri = uri
     return ShellScript(script_uri)
 
-re_comment = re.compile(r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"',
-                        re.DOTALL | re.MULTILINE)
+regex_comment = r'//.*?$|/\*.*?\*/|\'(?:\\.|[^\\\'])*\'|"(?:\\.|[^\\"])*"'
+re_comment = re.compile(regex_comment, re.DOTALL | re.MULTILINE)
 
 
 def remove_comments(t):
