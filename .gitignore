@@ -18,3 +18,5 @@ distribute-0.6.8.tar.gz
 debian/python-couchapp
 debian/couchapp
 couchapp/autopush/select_backport.so
+.coverage
+cover/*
