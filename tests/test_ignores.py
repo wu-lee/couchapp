@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 
-import unittest
+import unittest2 as unittest
 import tempfile
 import os
 from shutil import rmtree

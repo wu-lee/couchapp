@@ -152,7 +152,7 @@ def main():
                    author_email='benoitc@e-engura.org',
                    description='Standalone CouchDB Application Development Made Simple.',
                    long_description=long_description,
-                   tests_require = ['nose', 'coverage'],
+                   tests_require = ['unittest2', 'nose', 'coverage'],
                    test_suite="tests",
                    keywords='couchdb couchapp',
                    platforms=['any'],
