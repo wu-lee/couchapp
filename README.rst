@@ -36,15 +36,16 @@ connectivity.
 Installation
 ------------
 
-Couchapp requires Python 2.5x or sup. To install couchapp using
-easy_install you must make sure you have a recent version of distribute
-installed::
+Couchapp requires Python 2.5x or greater. Couchapp is most easily installed 
+using the latest versions of the standard python packaging tools, setuptools 
+and pip. They may be installed like so::
 
-    $ curl -O http://python-distribute.org/distribute_setup.py
-    $ sudo python distribute_setup.py
-    $ easy_install pip
+    $ curl -O https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py
+    $ sudo python ez_setup.py
+    $ curl -O https://raw.github.com/pypa/pip/master/contrib/get-pip.py
+    $ sudo python get-pip.py
 
-To install or upgrade to the latest released version of couchapp::
+Installing couchapp is then simply a matter of::
 
     $ pip install couchapp
 
@@ -52,14 +53,14 @@ On OSX 10.6/10.7 you may need to set ARCH_FLAGS::
 
     $ env ARCHFLAGS="-arch i386 -arch x86_64" pip install couchapp
 
-To install/upgrade development version::
+To install/upgrade a development version of couchapp::
 
-    $ pip install git+http://github.com/couchapp/couchapp.git#egg=Couchapp
+    $ pip install -e git+http://github.com/couchapp/couchapp.git#egg=Couchapp
 
 Note: some installations need to use *sudo* command beafore each command
 line.
 
-Note on debian system don't forget to install python-dev.
+Note: on debian system don't forget to install python-dev.
 
 To install on windows follow instructions `here
 <http://www.couchapp.org/page/windows-python-installers>`_.
