@@ -115,7 +115,8 @@ class CouchdbResource(Resource):
         except ResourceError, e:
             msg = getattr(e, 'msg', '')
             if e.response and msg:
-                if e.response.headers.get('content-type') == 'application/json':
+                if e.response.headers.get('content-type') == \
+                        'application/json':
                     try:
                         msg = json.loads(str(msg))
                     except ValueError:
@@ -280,7 +281,8 @@ class Database(object):
         by CouchDB server when you save.
         @param force_update: boolean, if there is conlict, try to update
         with latest revision
-        @param encode: Encode attachments if needed (depends on couchdb version)
+        @param encode: Encode attachments if needed (depends on couchdb
+        version)
 
         @return: new doc with updated revision an id
         """
@@ -353,14 +355,15 @@ class Database(object):
 
         @param docs: list of docs
         @param use_uuids: add _id in doc who don't have it already set.
-        @param all_or_nothing: In the case of a power failure, when the database
-        restarts either all the changes will have been saved or none of them.
-        However, it does not do conflict checking, so the documents will
+        @param all_or_nothing: In the case of a power failure, when the
+        database restarts either all the changes will have been saved or none
+        of them. However, it does not do conflict checking, so the documents
+        will.
 
 
         @return doc lists updated with new revision or raise BulkSaveError
-        exception. You can access to doc created and docs in error as properties
-        of this exception.
+        exception. You can access to doc created and docs in error as
+        properties of this exception.
         """
 
         def is_id(doc):
@@ -475,7 +478,9 @@ class Database(object):
 
         if "keys" in params:
             keys = params.pop("keys")
-            return self.res.post(path, json.dumps({"keys": keys}, **params)).json_body
+            return self.res.post(path,
+                                 json.dumps({"keys":
+                                             keys}, **params)).json_body
 
         return self.res.get(path, **params).json_body
 

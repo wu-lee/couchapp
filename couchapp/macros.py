@@ -110,8 +110,8 @@ def run_json_macros(doc, f_string, app_dir):
             include_to = included
             for i, field in enumerate(fields):
                 if not field in library:
-                    logger.warning("process json macro: unknown json source: %s"
-                                   % mo.group(2))
+                    logger.warning("process json macro: unknown json "
+                                   + "source: %s" % mo.group(2))
                     break
                 library = library[field]
                 if i+1 < count:
@@ -132,7 +132,7 @@ def run_json_macros(doc, f_string, app_dir):
         return f_string
 
     for k, v in included.iteritems():
-        varstrings.append("var %s = %s;" % (k,
-                                            util.json.dumps(v).encode('utf-8')))
+        varstrings.append("var %s = %s;" %
+                          (k, util.json.dumps(v).encode('utf-8')))
 
     return re_json.sub(rjson2, f_string)

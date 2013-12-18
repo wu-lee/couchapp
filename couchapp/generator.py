@@ -50,7 +50,8 @@ def generate_app(path, template=None, create=False):
     """ Generates a CouchApp in app_dir
 
     :attr verbose: boolean, default False
-    :return: boolean, dict. { 'ok': True } if ok, { 'ok': False, 'error': message }
+    :return: boolean, dict. { 'ok': True } if ok,
+    { 'ok': False, 'error': message }
     if something was wrong.
     """
 
