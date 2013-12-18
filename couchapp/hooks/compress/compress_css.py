@@ -3,13 +3,10 @@
 # This file is part of couchapp released under the Apache 2 license.
 # See the NOTICE for more information.
 
-from optparse import OptionParser
 import os
 import re
 import sys
 sys.path.append(os.path.dirname(__file__))
-
-from couchapp.util import relpath
 
 __all__ = ['CSSParser']
 
