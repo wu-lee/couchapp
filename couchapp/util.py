@@ -15,7 +15,7 @@ import re
 import string
 import sys
 
-from couchapp.errors import ScriptError, AppError
+from couchapp.errors import ScriptError
 
 try:
     import json
