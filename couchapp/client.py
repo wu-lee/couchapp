@@ -150,7 +150,7 @@ def couchdb_version(server_uri):
 
     try:
         resp = res.get()
-    except Exception, e:
+    except Exception:
         return UNKNOWN_VERSION
 
     version = resp.json_body["version"]

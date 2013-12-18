@@ -351,13 +351,13 @@ class LocalDoc(object):
                 else:
                     try:
                         content = util.read(current_path).strip()
-                    except UnicodeDecodeError, e:
+                    except UnicodeDecodeError:
                         logger.warning("%s isn't encoded in utf8" %
                                        current_path)
                         content = util.read(current_path, utf8=False)
                         try:
                             content.encode('utf-8')
-                        except UnicodeError, e:
+                        except UnicodeError:
                             logger.warning("plan B didn't work, %s is a binary"
                                            % current_path)
                             logger.warning("use plan C: encode to base64")
