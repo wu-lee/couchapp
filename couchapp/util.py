@@ -347,7 +347,7 @@ def read(fname, utf8=True, force_read=False):
         try:
             with codecs.open(fname, 'rb', "utf-8") as f:
                 return f.read()
-        except UnicodeError, e:
+        except UnicodeError:
             if force_read:
                 return read(fname, utf8=False)
             raise

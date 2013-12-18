@@ -86,7 +86,7 @@ class CouchappWatcher(object):
             except (StopIteration, KeyboardInterrupt):
                 self.observer.stop()
                 return 0
-            except Exception, e:
+            except Exception:
                 log.info("unhandled exception in main loop:\n%s" %
                          traceback.format_exc())
                 return -1
