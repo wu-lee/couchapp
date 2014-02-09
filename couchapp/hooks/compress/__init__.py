@@ -97,14 +97,14 @@ class Compress(object):
                     logger.warning("Warning: js_compressor settings should " +
                                    "be a string")
                     logger.warning("Selecting default backend (jsmin)")
-                    import couchapp.hooks.compress.jsmin as backend
+                    import couchapp.hooks.compress.default as backend
                 else:
                     try:
                         backend = __import__(modname, {}, {}, [''])
                     except ImportError:
-                        import couchapp.hooks.compress.jsmin as backend
+                        import couchapp.hooks.compress.default as backend
             else:
-                import couchapp.hooks.compress.jsmin as backend
+                import couchapp.hooks.compress.default as backend
             self.compress_js(backend, actions['js'])
 
 
