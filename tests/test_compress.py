@@ -4,7 +4,7 @@
 # This software is licensed as described in the file LICENSE, which
 # you should have received as part of this distribution.
 
-import unittest
+import unittest2 as unittest
 import mock
 import os
 
@@ -16,7 +16,7 @@ class CompressTest(unittest.TestCase):
         config.conf['compress'] = {'js': {'foo':['shows/example-show.js']}}
         with mock.patch('couchapp.hooks.compress.default.compress', return_value='foo') as mock_compress:
             from couchapp.hooks.compress import Compress
-            compress = Compress(os.path.join(os.path.dirname(__file__), '../../../testapp'))
+            compress = Compress(os.path.join(os.path.dirname(__file__), 'testapp'))
             compress.conf = config
             with mock.patch('couchapp.util.write'):
                 compress.run()
