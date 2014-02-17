@@ -153,7 +153,7 @@ def clone(source, dest=None, rev=None):
                     filename = os.path.join(vs_item_dir, '%s.js' % func_name)
                     util.write(filename, func)
                     logger.warning("clone view not in manifest: %s" % filename)
-        elif key in ('shows', 'lists', 'filter', 'update'):
+        elif key in ('shows', 'lists', 'filter', 'updates'):
             showpath = os.path.join(path, key)
             if not os.path.isdir(showpath):
                 os.makedirs(showpath)
