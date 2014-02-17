@@ -153,7 +153,7 @@ def main():
                    description='Standalone CouchDB Application Development Made Simple.',
                    long_description=long_description,
                    tests_require = ['unittest2', 'nose', 'coverage',
-                                    'nose-testconfig'],
+                                    'nose-testconfig', 'mock'],
                    test_suite="tests",
                    keywords='couchdb couchapp',
                    platforms=['any'],
