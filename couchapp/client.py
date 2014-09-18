@@ -147,14 +147,14 @@ class CouchdbResource(Resource):
 
 
 def couchdb_version(server_uri):
-    res = CouchdbResource(server_uri)
+    res = requests.get(server_uri)
 
     try:
-        resp = res.get()
-    except Exception:
+        resp = res.json()
+    except ValueError:
         return UNKNOWN_VERSION
 
-    version = resp.json_body["version"]
+    version = resp["version"]
     t = []
     for p in version.split("."):
         try:
