@@ -19,6 +19,8 @@ try:
 except ImportError:
     desktopcouch = None
 
+import requests
+
 from restkit import Resource, ClientResponse, ResourceError
 from restkit import util
 from restkit import oauth2 as oauth
