@@ -167,8 +167,10 @@ def couchdb_version(server_uri):
 
 class Uuids(object):
 
-    def __init__(self, uri, max_uuids=1000, **client_opts):
-        self.res = CouchdbResource(uri=uri, **client_opts)
+    def __init__(self, uri, max_uuids=1000):
+        if uri.endswith("/"):
+            uri = uri[:-1]
+        self.uri = uri
         self._uuids = []
         self.max_uuids = max_uuids
 
@@ -183,8 +185,8 @@ class Uuids(object):
 
     def fetch_uuids(self):
         count = self.max_uuids - len(self._uuids)
-        resp = self.res.get('/_uuids', count=count)
-        self._uuids += resp.json_body['uuids']
+        resp = requests.get(self.uri + '/_uuids', params={count: count}).json()
+        self._uuids += resp['uuids']
 
 
 class Database(object):
@@ -219,7 +221,7 @@ class Database(object):
         self.res = CouchdbResource(uri=uri, **client_opts)
         self.server_uri, self.dbname = uri.rsplit('/', 1)
 
-        self.uuids = Uuids(self.server_uri, **client_opts)
+        self.uuids = Uuids(self.server_uri)
 
         if create:
             # create the db
