@@ -27,7 +27,7 @@ you options not found on other platforms.
 Deploy your apps to the client
 ++++++++++++++++++++++++++++++
 
-CouchDB's replication means that programs running locally, can still be
+CouchDB's replication means that programs running locally can still be
 social. Applications control replication data-flows, so publishing
 messages and subscribing to other people is easy. Your users will see
 the benefits of the web without the hassle of requiring always-on
@@ -57,15 +57,15 @@ To install/upgrade a development version of couchapp::
 
     $ pip install -e git+http://github.com/couchapp/couchapp.git#egg=Couchapp
 
-Note: some installations need to use *sudo* command beafore each command
+Note: Some installations need to use *sudo* command before each command
 line.
 
-Note: on debian system don't forget to install python-dev.
+Note: On debian system don't forget to install python-dev.
 
-To install on windows follow instructions `here
+To install on Windows follow instructions `here
 <http://www.couchapp.org/page/windows-python-installers>`_.
 
-More installion options on the `website
+More installation options on the `website
 <http://www.couchapp.org/page/installing>`_.
 
 Getting started
