@@ -42,7 +42,7 @@ and pip. They may be installed like so::
 
     $ curl -O https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py
     $ sudo python ez_setup.py
-    $ curl -O https://raw.github.com/pypa/pip/master/contrib/get-pip.py
+    $ curl -O -L https://raw.github.com/pypa/pip/master/contrib/get-pip.py
     $ sudo python get-pip.py
 
 Installing couchapp is then simply a matter of::
